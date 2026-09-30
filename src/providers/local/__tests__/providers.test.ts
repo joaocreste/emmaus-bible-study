@@ -166,7 +166,7 @@ describe('ScriptureProvider — Bible versions in Portuguese, Spanish and French
         });
       }
     }
-  });
+  }, 120_000);
 
   it('French versions follow the English numbering where the Hebrew differs', async () => {
     // Malachi 4 (Hebrew 3:19–24), Joel 2:28 (Hebrew 3:1), Daniel 4:1 (Hebrew 3:31), Job 41:1 (Hebrew 40:25)

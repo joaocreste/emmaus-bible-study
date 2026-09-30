@@ -27,5 +27,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'server/**/*.test.ts'],
+    // data tests read hundreds of bundled files; CI runners are several times slower than a laptop
+    testTimeout: 30_000,
   },
 });
