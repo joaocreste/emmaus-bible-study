@@ -1,0 +1,187 @@
+.root {
+  container: study / inline-size;
+  position: relative;
+  min-height: 100%;
+  --gutter: var(--space-10);
+}
+
+/* Used when the host pane does not scroll: the workspace becomes the scroll container. */
+.selfScroll {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+.root:focus {
+  outline: none;
+}
+
+.root:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -3px;
+}
+
+/* Section headings receive focus programmatically (nav pills, "show cross-references"):
+   a quiet gold underline instead of a box, since they are not controls. */
+.root [data-section] h2[tabindex='-1']:focus {
+  outline: none;
+}
+
+.root [data-section] h2[tabindex='-1']:focus-visible {
+  text-decoration: underline 2px var(--color-gold);
+  text-underline-offset: 0.18em;
+}
+
+/* The scroll container's scroll-padding (set from the measured sticky height) keeps
+   scrolled-to content clear of the sticky bar; sections land flush under it. */
+.root [data-section] {
+  scroll-margin-top: 0;
+}
+
+.column {
+  width: 100%;
+  max-width: calc(62rem + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 6px 12px -12px color-mix(in srgb, var(--color-ink) 40%, transparent);
+}
+
+/* Short viewports (landscape phones, 200–400% zoom): the section bar scrolls with the study
+   instead of covering what little reading area there is (WCAG 1.4.10). */
+@media (max-height: 520px) {
+  .sticky {
+    position: static;
+    box-shadow: none;
+  }
+}
+
+.end {
+  padding-block: var(--space-4) var(--space-20);
+}
+
+.endText {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--color-ink-3);
+  text-align: center;
+  margin-top: calc(-1 * var(--space-6));
+}
+
+/* A generated page still being composed: the next section is on its way (shown just before Sources). */
+.composing {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin: var(--space-10) 0 var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  animation: emmaus-fade-in var(--duration-slow) var(--ease-out);
+}
+
+.composingMark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 38px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-arch);
+  background: var(--color-surface-raised);
+}
+
+.composingText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.composingTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.composingStep {
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  font-style: italic;
+  color: var(--color-ink-3);
+  overflow-wrap: anywhere;
+  animation: emmaus-fade-in var(--duration-base) var(--ease-out);
+}
+
+@container study (max-width: 56rem) {
+  .column {
+    --gutter: var(--space-8);
+  }
+}
+
+@container study (max-width: 36rem) {
+  .column {
+    --gutter: var(--space-4);
+  }
+}
+
+/* ---------- Empty state ---------- */
+
+.empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: 60vh;
+  padding: var(--space-8) var(--space-4);
+  outline: none;
+}
+
+.emptyInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 26rem;
+  text-align: center;
+  animation: emmaus-fade-in var(--duration-slow) var(--ease-out);
+}
+
+.arch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 78px;
+  margin-bottom: var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-arch);
+  background: var(--color-surface);
+  color: var(--color-gold);
+}
+
+.emptyTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.emptyText {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.55;
+  color: var(--color-ink-3);
+}

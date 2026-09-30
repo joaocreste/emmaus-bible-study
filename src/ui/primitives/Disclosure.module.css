@@ -1,0 +1,50 @@
+.disclosure {
+  border-radius: var(--radius-md);
+}
+
+.trigger {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  background: none;
+  border: 0;
+  text-align: left;
+  color: inherit;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.summary {
+  flex: 1;
+  min-width: 0;
+}
+
+.chevron {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  color: var(--color-ink-3);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.open .chevron {
+  transform: rotate(180deg);
+}
+
+.panel {
+  animation: emmaus-fade-up var(--duration-base) var(--ease-out);
+}
+
+@media (pointer: coarse) {
+  .trigger {
+    min-height: 44px;
+  }
+}

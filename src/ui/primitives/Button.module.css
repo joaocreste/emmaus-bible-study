@@ -1,0 +1,154 @@
+.button {
+  composes: touch-target from global;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  opacity: 0.5;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-pill);
+}
+
+.sm {
+  height: 30px;
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.md {
+  height: 38px;
+  padding: 0 var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.lg {
+  height: 48px;
+  padding: 0 var(--space-6);
+  font-size: var(--text-base);
+}
+
+.primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.secondary {
+  background: var(--color-surface-raised);
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
+}
+
+.secondary:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary-ink);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--color-ink-2);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--color-surface-sunken);
+  color: var(--color-ink);
+}
+
+.quiet {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-ink);
+}
+
+.quiet:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-primary-soft) 70%, var(--color-primary) 18%);
+}
+
+.link {
+  height: auto;
+  padding: 0;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: var(--color-primary-ink);
+  font-weight: 600;
+}
+
+.link:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.iconOnly {
+  padding: 0;
+  aspect-ratio: 1;
+}
+
+.iconOnly.sm {
+  width: 30px;
+}
+
+.iconOnly.md {
+  width: 38px;
+}
+
+.iconOnly.lg {
+  width: 48px;
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+}
+
+.icon :global(svg) {
+  width: 1.05em;
+  height: 1.05em;
+}
+
+.lg .icon :global(svg) {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+.label {
+  display: inline-block;
+}
+
+/* Touch: small buttons grow a little; the global touch-target hit area makes up the rest of 44px. */
+@media (pointer: coarse) {
+  .sm {
+    height: 36px;
+  }
+
+  .iconOnly.sm {
+    width: 36px;
+  }
+}

@@ -1,0 +1,99 @@
+.caution {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  max-width: var(--reading-measure);
+  margin-bottom: var(--space-6);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--color-ink-2);
+}
+
+.caution :global(svg) {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--color-gold-ink);
+}
+
+.grid {
+  container: words / inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+  list-style: none;
+}
+
+.cell {
+  min-width: 0;
+}
+
+/* Two columns once the study pane is wide enough for two readable cards */
+@container study (min-width: 50rem) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.library {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+}
+
+.arch {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 58px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-arch);
+  background: var(--color-gold-soft);
+  color: var(--color-gold-ink);
+}
+
+.libraryText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.libraryTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+}
+
+.libraryBody {
+  max-width: var(--reading-measure);
+  margin-bottom: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--color-ink-2);
+}
+
+.none {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--color-ink-3);
+}
+
+@media (max-width: 759px) {
+  .library {
+    flex-direction: column;
+    padding: var(--space-5);
+  }
+}

@@ -1,0 +1,185 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+  scroll-margin-top: var(--space-4);
+  transition:
+    border-color var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out);
+}
+
+.card:hover {
+  border-color: var(--color-border-strong);
+}
+
+.updated {
+  border-color: color-mix(in srgb, var(--color-gold) 55%, var(--color-border));
+}
+
+/* One-time gold pulse (re-keyed per conversation focus so it replays) */
+.pulse {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: emmaus-pulse 1.6s var(--ease-out) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.headText {
+  min-width: 0;
+}
+
+.updatedLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-gold-ink);
+}
+
+.updatedLabel :global(svg) {
+  color: var(--color-gold);
+}
+
+.ref {
+  font-family: var(--font-serif);
+  font-size: calc(1.125rem * var(--reader-scale));
+  font-weight: 600;
+  line-height: var(--leading-snug);
+  color: var(--color-ink);
+}
+
+.title {
+  margin-top: 2px;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-ink-2);
+}
+
+.badge {
+  flex: none;
+  margin-top: 2px;
+}
+
+.excerpt {
+  padding-inline-start: var(--space-4);
+  border-inline-start: 2px solid var(--color-rule);
+}
+
+.why {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-inline-start: var(--space-4);
+  border-inline-start: 2px solid var(--color-border);
+}
+
+.whySynthesis {
+  border-inline-start-color: var(--kind-synthesis);
+}
+
+.whyLabel {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+.whyText {
+  max-width: var(--reading-measure);
+}
+
+.why :global(p + div) {
+  margin-top: var(--space-2);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid color-mix(in srgb, var(--color-rule) 60%, transparent);
+}
+
+.actionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+.from {
+  composes: touch-target from global;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 2px 10px 2px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-ink-2);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.from:hover {
+  border-color: var(--color-gold);
+  background: var(--color-gold-soft);
+}
+
+.from :global(svg) {
+  width: 13px;
+  height: 13px;
+  color: var(--color-gold-ink);
+}
+
+.fromActive {
+  border-color: var(--color-gold);
+  background: var(--color-gold-soft);
+  color: var(--color-gold-ink);
+}
+
+/* Narrow study pane (phones, tablet split): stack the relationship above the reference */
+@container xrefs (max-width: 32rem) {
+  .card {
+    padding: var(--space-4);
+  }
+  .head {
+    flex-direction: column-reverse;
+    gap: var(--space-2);
+  }
+}

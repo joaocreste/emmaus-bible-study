@@ -1,0 +1,49 @@
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gold);
+}
+
+.svg path {
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.vertical {
+  animation: draw 1.8s var(--ease-in-out) infinite;
+}
+
+.horizontal {
+  animation: draw 1.8s var(--ease-in-out) 0.35s infinite;
+}
+
+@keyframes draw {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  45% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  80% {
+    stroke-dashoffset: 0;
+    opacity: 0.25;
+  }
+  100% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .svg path {
+    animation: none;
+    stroke-dashoffset: 0;
+    opacity: 0.8;
+  }
+}

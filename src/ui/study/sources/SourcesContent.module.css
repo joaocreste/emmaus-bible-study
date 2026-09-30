@@ -1,0 +1,56 @@
+.content {
+  min-width: 0;
+}
+
+.summary {
+  margin-bottom: var(--space-6);
+  font-size: var(--text-sm);
+  color: var(--color-ink-3);
+}
+
+.summary strong {
+  color: var(--color-ink);
+}
+
+.group + .group {
+  margin-top: var(--space-8);
+}
+
+.groupTitle {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-rule);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-ink-2);
+}
+
+.groupCount {
+  font-weight: 600;
+  color: var(--color-gold-ink);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+  /* cards in a row share one height, so their reading links line up */
+  align-items: stretch;
+  gap: var(--space-3);
+  list-style: none;
+}
+
+.missing .groupTitle {
+  color: var(--color-danger);
+}
+
+.missingText {
+  font-size: var(--text-sm);
+  color: var(--color-ink-2);
+  word-break: break-word;
+}

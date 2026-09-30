@@ -1,0 +1,128 @@
+.tabs {
+  min-width: 0;
+}
+
+.list {
+  display: flex;
+  gap: var(--space-1);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--color-rule);
+  /* keep focus rings visible inside the scroll container */
+  padding: 3px 3px 0;
+  margin: -3px -3px 0;
+}
+
+.list::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mouse and trackpad: every tab stays visible, wrapping onto a second row if needed. */
+@media (hover: hover) and (pointer: fine) {
+  .list {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    overflow-x: visible;
+  }
+}
+
+/* Touch: the strip scrolls; a soft fade marks the edge that hides more tabs. */
+.list[data-fade-end='true'] {
+  mask-image: linear-gradient(to right, var(--color-ink) calc(100% - 28px), transparent);
+}
+
+.list[data-fade-start='true'] {
+  mask-image: linear-gradient(to right, transparent, var(--color-ink) 28px);
+}
+
+.list[data-fade-start='true'][data-fade-end='true'] {
+  mask-image: linear-gradient(to right, transparent, var(--color-ink) 28px, var(--color-ink) calc(100% - 28px), transparent);
+}
+
+.equal .tab {
+  flex: 1 1 0;
+  min-width: 8.5rem;
+}
+
+.tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
+  flex: none;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: none;
+  color: var(--color-ink-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.tab::after {
+  content: '';
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: transparent;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.tab:hover {
+  color: var(--color-ink);
+  background: color-mix(in srgb, var(--color-surface-sunken) 55%, transparent);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+.selected {
+  color: var(--color-ink);
+}
+
+.selected::after {
+  background: var(--color-gold);
+}
+
+.tabLabel {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tabHint {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--color-ink-3);
+}
+
+.panel {
+  padding-top: var(--space-5);
+}
+
+.panel:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}

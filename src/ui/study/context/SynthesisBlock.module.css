@@ -1,0 +1,72 @@
+.block {
+  --rule: var(--kind-synthesis);
+  position: relative;
+  padding-left: var(--space-5);
+  max-width: var(--reading-measure);
+}
+
+.block::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.35em;
+  bottom: 0.35em;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--rule);
+  opacity: 0.75;
+}
+
+.block[data-kind='literary'] {
+  --rule: var(--kind-literary);
+}
+
+.block[data-kind='historical'] {
+  --rule: var(--kind-historical);
+}
+
+.block[data-kind='summary'] {
+  --rule: var(--kind-summary);
+}
+
+.block[data-kind='commentary'],
+.block[data-kind='quotation'] {
+  --rule: var(--kind-commentary);
+}
+
+.block[data-kind='scripture'] {
+  --rule: var(--kind-scripture);
+}
+
+.block[data-kind='dataset'] {
+  --rule: var(--kind-dataset);
+}
+
+.heading {
+  margin-bottom: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+.text + .text {
+  margin-top: var(--space-3);
+}
+
+.lg .text {
+  font-size: calc(var(--text-reading) * 1.06);
+  color: var(--color-ink);
+}
+
+/* Composed live, not reviewed by an editor: a dashed rule in the synthesis colour. */
+.block[data-verification='generated'] {
+  --rule: var(--kind-synthesis);
+}
+
+.block[data-verification='generated']::before {
+  background: repeating-linear-gradient(to bottom, var(--rule) 0 5px, transparent 5px 9px);
+  border-radius: 0;
+}

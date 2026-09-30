@@ -1,0 +1,32 @@
+.wrap {
+  margin: var(--space-10) 0 var(--space-5);
+}
+
+.wrap:first-child {
+  margin-top: 0;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-xl);
+  color: var(--color-ink);
+}
+
+/* short gold rule leading the heading — the "rubric" of an annotated Bible */
+.heading::before {
+  content: '';
+  flex: none;
+  width: 18px;
+  height: 1px;
+  background: var(--color-gold);
+}
+
+.note {
+  margin-top: var(--space-1);
+  padding-left: calc(18px + var(--space-3));
+  font-size: var(--text-sm);
+  color: var(--color-ink-3);
+  max-width: 44rem;
+}

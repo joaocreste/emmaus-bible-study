@@ -1,0 +1,13 @@
+.mark {
+  display: inline-block;
+  margin-inline-start: 0.4em;
+  font-family: var(--font-sans);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant: normal;
+  color: var(--color-ink-3);
+  white-space: nowrap;
+}

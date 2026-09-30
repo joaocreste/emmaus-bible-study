@@ -1,0 +1,16 @@
+node_modules
+dist
+.DS_Store
+*.log
+test-results
+playwright-report
+.data-cache
+.env.local
+.env.*.local
+.kb-cache
+# STEPBible-derived data (built by `npm run data:build -- --only=stepbible`, run automatically by `npm run dev`):
+# STEPBible asks projects to point to github.com/STEPBible rather than redistribute their data.
+public/data/original/
+public/data/lexicon/
+public/data/concordance/
+.claude/

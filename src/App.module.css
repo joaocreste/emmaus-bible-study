@@ -1,0 +1,7 @@
+/* The app fills the viewport; panes scroll inside it (docs/DESIGN.md §4). */
+.root {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  isolation: isolate;
+}

@@ -1,0 +1,171 @@
+.nav {
+  position: relative;
+  min-width: 0;
+}
+
+.list {
+  position: relative;
+  display: flex;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-2) 2px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* soft fades on the edges that hide more pills (mask uses alpha only) */
+.list[data-fade-end='true'] {
+  mask-image: linear-gradient(to right, var(--color-ink) calc(100% - 28px), transparent);
+}
+
+.list[data-fade-start='true'] {
+  mask-image: linear-gradient(to right, transparent, var(--color-ink) 28px);
+}
+
+.list[data-fade-start='true'][data-fade-end='true'] {
+  mask-image: linear-gradient(to right, transparent, var(--color-ink) 28px, var(--color-ink) calc(100% - 28px), transparent);
+}
+
+.list::-webkit-scrollbar {
+  display: none;
+}
+
+.item {
+  flex: none;
+}
+
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-ink-3);
+  text-decoration: none;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pill:hover {
+  background: var(--color-surface-sunken);
+  color: var(--color-ink);
+}
+
+.pill:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -1px;
+  border-radius: var(--radius-pill);
+}
+
+.active,
+.active:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 28%, transparent);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-ink);
+}
+
+.icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+
+.dot {
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  box-shadow: 0 0 0 2px var(--color-bg);
+  animation: dot-in var(--duration-slow) var(--ease-out);
+}
+
+@keyframes dot-in {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Chevrons at an edge that hides more pills (fine pointers; touch users swipe). */
+.edge {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-top: -14px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-ink-2);
+}
+
+.edge:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
+}
+
+.edge :global(svg) {
+  width: 16px;
+  height: 16px;
+}
+
+.edgeStart {
+  left: 0;
+}
+
+.edgeEnd {
+  right: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .edge {
+    display: inline-flex;
+  }
+}
+
+/* Narrower panes: tighter pills without icons, so more sections fit. */
+@container study (max-width: 62rem) {
+  .pill {
+    gap: 4px;
+    padding: 0 var(--space-2);
+  }
+
+  .icon {
+    display: none;
+  }
+
+  .dot {
+    top: 3px;
+    right: 2px;
+  }
+}
+
+@media (pointer: coarse) {
+  .pill {
+    height: 44px;
+  }
+}

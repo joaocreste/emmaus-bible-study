@@ -1,0 +1,254 @@
+/*
+ * Emmaus design tokens — Mediterranean / biblical-earth palette.
+ * Two themes: "parchment" (default light) and "evening" (warm dark).
+ * Contrast verified (WCAG AA): see docs/DESIGN.md → Color.
+ *
+ * Rules of use
+ *  - Gold is an accent (verse numbers, focus, rules, active markers) — never a large surface.
+ *  - Terracotta marks interactive words/highlights in Scripture; always paired with underline, not color alone.
+ *  - Olive is the primary action color. Sage is for calm secondary surfaces/tags.
+ */
+
+:root {
+  /* ---------- Raw palette ---------- */
+  --parchment-50: #fbf8f1;
+  --parchment-100: #f4eee2;
+  --parchment-200: #ede4d3;
+  --parchment-300: #e2d5bd;
+  --sand-300: #dccaa6;
+  --sand-400: #cdb68a;
+  --stone-400: #a39a8c;
+  --stone-500: #8a8174;
+  --charcoal-700: #4e473f;
+  --charcoal-800: #3a342e;
+  --charcoal-900: #2a2622;
+  --olive-300: #b9c39c;
+  --olive-500: #6f7f4a;
+  --olive-600: #556536;
+  --olive-700: #3f4b27;
+  --sage-100: #e7eadc;
+  --sage-200: #d6dcc6;
+  --sage-400: #9aa68a;
+  --sage-700: #5c6b4e;
+  --terracotta-100: #f4e2d7;
+  --terracotta-200: #ecc9b5;
+  --terracotta-500: #b4633f;
+  --terracotta-600: #a4532f;
+  --terracotta-700: #8e4424;
+  --gold-200: #efe2c2;
+  --gold-400: #c9a55b;
+  --gold-500: #a57f32;
+  --gold-600: #95712a;
+  --gold-700: #7f5e1d;
+
+  /* ---------- Semantic: parchment theme ---------- */
+  --color-bg: var(--parchment-100);
+  --color-bg-texture-opacity: 0.35;
+  --color-surface: var(--parchment-50);
+  --color-surface-raised: #fffdf8;
+  --color-surface-sunken: var(--parchment-200);
+  --color-surface-overlay: rgba(42, 38, 34, 0.32);
+  --color-border: #ddd2bd;
+  --color-border-strong: #c9b99b;
+  --color-rule: #d8c9ab;
+
+  --color-ink: var(--charcoal-900);
+  --color-ink-2: var(--charcoal-700);
+  --color-ink-3: #6a6155; /* metadata; ≥4.8:1 on all light surfaces */
+  --color-ink-inverse: var(--parchment-50);
+
+  --color-primary: var(--olive-600);
+  --color-primary-hover: var(--olive-700);
+  --color-primary-soft: var(--sage-100);
+  --color-primary-ink: var(--olive-700); /* olive text */
+  --color-on-primary: var(--parchment-50);
+
+  --color-accent: var(--terracotta-600);
+  --color-accent-ink: var(--terracotta-700); /* terracotta text, ≥5.5:1 */
+  --color-accent-soft: var(--terracotta-100);
+  --color-accent-line: var(--terracotta-500);
+
+  --color-gold: var(--gold-500); /* decorative / UI strokes only (≥3:1) */
+  --color-gold-ink: var(--gold-700); /* gold text, ≥4.9:1 */
+  --color-gold-soft: var(--gold-200);
+
+  --color-sage: var(--sage-400);
+  --color-sage-ink: var(--sage-700);
+  --color-sage-soft: var(--sage-100);
+
+  /* highlight bands (verse focus, updated items) */
+  --color-highlight: #f3e4bf;
+  --color-highlight-line: var(--gold-500);
+  --color-word-highlight: #f6d9c6;
+
+  /* ≥3.3:1 on every light surface, incl. the verse highlight and word highlight bands */
+  --color-focus-ring: var(--gold-600);
+  --color-danger: #9b3b2f;
+
+  /* provenance kind accents (dot + label; never color alone) */
+  --kind-scripture: var(--olive-600);
+  --kind-original: var(--gold-700);
+  --kind-lexical: var(--gold-700);
+  --kind-historical: var(--sage-700);
+  --kind-literary: var(--sage-700);
+  --kind-commentary: var(--terracotta-700);
+  --kind-quotation: var(--terracotta-700);
+  --kind-summary: var(--charcoal-700);
+  --kind-synthesis: #6a5d86; /* muted, dusk violet — marks AI-assisted synthesis */
+  --kind-dataset: var(--color-ink-3); /* 11px label: ≥4.8:1 on every light surface */
+
+  /* ---------- Typography ---------- */
+  --font-display: 'Cormorant Garamond', 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --font-serif: 'Literata Variable', Literata, Georgia, 'Times New Roman', serif;
+  --font-sans: 'Source Sans 3 Variable', 'Source Sans 3', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-greek: 'Gentium Book Plus', 'Literata Variable', 'Times New Roman', serif;
+  --font-hebrew: 'Noto Serif Hebrew Variable', 'SBL Hebrew', 'Times New Roman', serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* reader scale is set by settings (0.9–1.4) on :root as --reader-scale */
+  --reader-scale: 1;
+
+  --text-2xs: 0.6875rem; /* 11 */
+  --text-xs: 0.75rem; /* 12 */
+  --text-sm: 0.875rem; /* 14 */
+  --text-base: 1rem; /* 16 */
+  --text-md: 1.0625rem; /* 17 */
+  --text-lg: 1.25rem; /* 20 */
+  --text-xl: 1.5rem; /* 24 */
+  --text-2xl: 1.875rem; /* 30 */
+  --text-3xl: 2.375rem; /* 38 */
+  --text-4xl: 3rem; /* 48 */
+  --text-5xl: 3.75rem; /* 60 */
+
+  /* reading sizes scale with the user's setting */
+  --text-scripture: calc(1.1875rem * var(--reader-scale)); /* 19px */
+  --text-reading: calc(1.0625rem * var(--reader-scale)); /* 17px */
+  --text-original: calc(1.5rem * var(--reader-scale));
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.4;
+  --leading-normal: 1.55;
+  --leading-reading: 1.75;
+
+  --tracking-caps: 0.08em;
+
+  /* ---------- Space (4px grid) ---------- */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  /* ---------- Shape & depth ---------- */
+  --radius-xs: 3px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+  /* Mediterranean arch: rounded top, square bottom */
+  --radius-arch: 999px 999px var(--radius-md) var(--radius-md);
+
+  --shadow-xs: 0 1px 0 rgba(58, 52, 46, 0.06);
+  --shadow-sm: 0 1px 2px rgba(58, 52, 46, 0.08), 0 1px 1px rgba(58, 52, 46, 0.04);
+  --shadow-md: 0 6px 18px -8px rgba(58, 52, 46, 0.22), 0 2px 4px rgba(58, 52, 46, 0.06);
+  --shadow-lg: 0 22px 48px -20px rgba(42, 38, 34, 0.35), 0 4px 10px rgba(42, 38, 34, 0.08);
+
+  /* ---------- Layout ---------- */
+  --topbar-height: 60px;
+  --chat-width: 400px;
+  --reading-measure: 44rem; /* ~70ch for Scripture */
+  --inspector-width: 440px;
+  --mobile-tabbar-height: 64px;
+
+  /* ---------- Motion ---------- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 420ms;
+
+  --z-sticky: 10;
+  --z-topbar: 20;
+  --z-drawer: 40;
+  --z-overlay: 50;
+  --z-toast: 60;
+
+  color-scheme: light;
+}
+
+/* ---------- Evening (warm dark) theme ---------- */
+:root[data-theme='evening'] {
+  --color-bg: #1d1b18;
+  --color-bg-texture-opacity: 0.12;
+  --color-surface: #262320;
+  --color-surface-raised: #2c2925;
+  --color-surface-sunken: #191714;
+  --color-surface-overlay: rgba(0, 0, 0, 0.5);
+  --color-border: #3b3630;
+  --color-border-strong: #4d463e;
+  --color-rule: #453e35;
+
+  --color-ink: #eee7da;
+  --color-ink-2: #cfc6b6;
+  --color-ink-3: #a89f90;
+  --color-ink-inverse: #1d1b18;
+
+  --color-primary: #a7b585;
+  --color-primary-hover: #bcc99c;
+  --color-primary-soft: #2f3427;
+  --color-primary-ink: #b7c496;
+  --color-on-primary: #1d1b18;
+
+  --color-accent: #de9272;
+  --color-accent-ink: #e7a488;
+  --color-accent-soft: #3a2a22;
+  --color-accent-line: #c9795a;
+
+  --color-gold: #c9a55b;
+  --color-gold-ink: #d4b26a;
+  --color-gold-soft: #3a3222;
+
+  --color-sage: #7f8b70;
+  --color-sage-ink: #a9b79a;
+  --color-sage-soft: #2a2e25;
+
+  --color-highlight: #3b3322;
+  --color-highlight-line: #c9a55b;
+  --color-word-highlight: #4a3025;
+
+  --color-focus-ring: #d4b26a;
+  --color-danger: #e38b7d;
+
+  --kind-scripture: #a7b585;
+  --kind-original: #d4b26a;
+  --kind-lexical: #d4b26a;
+  --kind-historical: #a9b79a;
+  --kind-literary: #a9b79a;
+  --kind-commentary: #e7a488;
+  --kind-quotation: #e7a488;
+  --kind-summary: #cfc6b6;
+  --kind-synthesis: #b3a6d4;
+  --kind-dataset: #a39a8c;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 20px -8px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 24px 50px -20px rgba(0, 0, 0, 0.7);
+
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

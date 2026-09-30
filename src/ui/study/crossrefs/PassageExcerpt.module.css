@@ -1,0 +1,83 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.text {
+  max-width: var(--reading-measure);
+  font-family: var(--font-serif);
+  font-size: calc(var(--text-reading) * 0.98);
+  font-style: italic;
+  line-height: 1.65;
+  color: var(--color-ink-2);
+}
+
+.clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+.num {
+  margin-inline-end: 0.2em;
+  font-family: var(--font-sans);
+  font-size: 0.62em;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--color-gold-ink);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.more {
+  color: var(--color-ink-3);
+}
+
+.toggle {
+  composes: touch-target from global;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-primary-ink);
+}
+
+.toggle:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* Same height as three clamped lines, so cards do not jump when excerpts arrive */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: calc(var(--text-reading) * 0.98 * 1.65 * 3);
+  max-width: 34rem;
+}
+
+.placeholder span {
+  height: 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+}
+
+.placeholder span:nth-child(2) {
+  width: 92%;
+}
+
+.placeholder span:nth-child(3) {
+  width: 58%;
+}
+
+.unavailable {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--color-ink-3);
+}

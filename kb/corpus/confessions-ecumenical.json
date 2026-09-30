@@ -1,0 +1,158 @@
+{
+ "corpus": {
+  "id": "confessions-ecumenical",
+  "label": "Ecumenical creeds",
+  "kind": "confession",
+  "sourceId": "nicene-creed",
+  "origin": {
+   "url": "https://ccel.org/ccel/schaff/creeds2",
+   "license": "Public domain (Schaff, The Creeds of Christendom, vol. 2, 1877; Percival, NPNF² vol. 14, 1900)",
+   "retrieved": "2026-09-28"
+  }
+ },
+ "documents": [
+  {
+   "id": "apostles-creed",
+   "title": "The Apostles' Creed (received form)",
+   "text": "I believe in God the Father Almighty; Maker of heaven and earth.\n\nAnd in Jesus Christ his only (begotten) Son our Lord; who was conceived by the Holy Ghost, born of the Virgin Mary; suffered under Pontius Pilate, was crucified, dead, and buried; he descended into hell [Hades, spirit-world]; the third day he rose from the dead; he ascended into heaven; and sitteth at the right hand of God the Father Almighty; from thence he shall come to judge the quick and the dead.\n\nI believe in the Holy Ghost; the holy catholic Church; the communion of saints; the forgiveness of sins; the resurrection of the body [flesh]; and the life everlasting. Amen.",
+   "sourceId": "apostles-creed",
+   "locator": "received form (forma recepta)",
+   "url": "https://ccel.org/ccel/schaff/creeds2/creeds2.iv.i.i.i.html",
+   "tradition": "Ecumenical",
+   "keywords": [
+    "Apostles' Creed",
+    "Symbolum Apostolicum",
+    "creed",
+    "ecumenical creed",
+    "descended into hell",
+    "communion of saints"
+   ]
+  },
+  {
+   "id": "nicene-creed-western",
+   "title": "The Nicene Creed — received text of the Western churches",
+   "text": "I believe in one God the Father Almighty; Maker of heaven and earth, and of all things visible and invisible.\n\nAnd in one Lord Jesus Christ, the only-begotten Son of God, begotten of the Father before all worlds [God of God], Light of Light, very God of very God, begotten, not made, being of one substance [essence] with the Father; by whom all things were made; who, for us men and for our salvation, came down from heaven, and was incarnate by the Holy Ghost of the Virgin Mary, and was made man; and was crucified also for us under Pontius Pilate; he suffered and was buried; and the third day he rose again, according to the Scriptures; and ascended into heaven, and sitteth on the right hand of the Father; and he shall come again, with glory, to judge both the quick and the dead; whose kingdom shall have no end.\n\nAnd [I believe] in the Holy Ghost, the Lord and Giver of Life; who proceedeth from the Father [and the Son]; who with the Father and the Son together is worshiped and glorified; who spake by the Prophets. And [I believe] one Holy Catholic and Apostolic Church. I acknowledge one Baptism for the remission of sins; and I look for the resurrection of the dead, and the life of the world to come. Amen.",
+   "sourceId": "nicene-creed",
+   "locator": "Forma recepta Ecclesiae Occidentalis (English)",
+   "url": "https://ccel.org/ccel/schaff/creeds2/creeds2.iv.i.ii.ii.html",
+   "tradition": "Ecumenical",
+   "keywords": [
+    "Nicene Creed",
+    "Niceno-Constantinopolitan Creed",
+    "filioque",
+    "and the Son",
+    "Western",
+    "creed",
+    "ecumenical creed",
+    "homoousios",
+    "one substance"
+   ]
+  },
+  {
+   "id": "chalcedon-definition",
+   "title": "The Definition of Chalcedon (451)",
+   "text": "We, then, following the holy Fathers, all with one consent, teach men to confess one and the same Son, our Lord Jesus Christ, the same perfect in Godhead and also perfect in manhood; truly God and truly man, of a reasonable [rational] soul and body; consubstantial [coessential] with the Father according to the Godhead, and consubstantial with us according to the Manhood; in all things like unto us, without sin; begotten before all ages of the Father according to the Godhead, and in these latter days, for us and for our salvation, born of the Virgin Mary, the Mother of God, according to the Manhood; one and the same Christ, Son, Lord, Only-begotten, to be acknowledged in two natures, inconfusedly, unchangeably, indivisibly, inseparably; the distinction of natures being by no means taken away by the union, but rather the property of each nature being preserved, and concurring in one Person and one Subsistence, not parted or divided into two persons, but one and the same Son, and only begotten, God the Word, the Lord Jesus Christ, as the prophets from the beginning [have declared] concerning him, and the Lord Jesus Christ himself has taught us, and the Creed of the holy Fathers has handed down to us.",
+   "sourceId": "chalcedonian-definition",
+   "authorId": "council-of-chalcedon",
+   "locator": "Symbol of Chalcedon, Oct. 22, 451",
+   "url": "https://ccel.org/ccel/schaff/creeds2/creeds2.iv.i.iii.html",
+   "tradition": "Ecumenical",
+   "refs": [
+    "LUK.1.43",
+    "HEB.4"
+   ],
+   "keywords": [
+    "Chalcedon",
+    "Chalcedonian Definition",
+    "two natures",
+    "hypostatic union",
+    "one person",
+    "Theotokos",
+    "Mother of God",
+    "Christology",
+    "truly God and truly man"
+   ]
+  },
+  {
+   "id": "athanasian-creed:1",
+   "title": "The Athanasian Creed, 1–28 — the Trinity",
+   "text": "1. Whosoever will be saved: before all things it is necessary that he hold the Catholic Faith:\n2. Which Faith except every one do keep whole and undefiled: without doubt he shall perish everlastingly.\n3. And the Catholic Faith is this: That we worship one God in Trinity, and Trinity in Unity;\n4. Neither confounding the Persons: nor dividing the Substance [Essence].\n5. For there is one Person of the Father: another of the Son: and another of the Holy Ghost.\n6. But the Godhead of the Father, of the Son, and of the Holy Ghost, is all one: the Glory equal, the Majesty coeternal.\n7. Such as the Father is: such is the Son: and such is the Holy Ghost.\n8. The Father uncreate [uncreated]: the Son uncreate [uncreated]: and the Holy Ghost uncreate [uncreated].\n9. The Father incomprehensible [unlimited]: the Son incomprehensible [unlimited]: and the Holy Ghost incomprehensible [unlimited, or infinite].\n10. The Father eternal: the Son eternal: and the Holy Ghost eternal.\n11. And yet they are not three eternals: but one eternal.\n12. As also there are not three uncreated: nor three incomprehensibles [infinites], but one uncreated: and one incomprehensible [infinite].\n13. So likewise the Father is Almighty: the Son Almighty: and the Holy Ghost Almighty.\n14. And yet they are not three Almighties: but one Almighty.\n15. So the Father is God: the Son is God: and the Holy Ghost is God.\n16. And yet they are not three Gods: but one God.\n17. So likewise the Father is Lord: the Son Lord: and the Holy Ghost Lord.\n18. And yet not three Lords: but one Lord.\n19. For like as we are compelled by the Christian verity: to acknowledge every Person by himself to be God and Lord:\n20. So are we forbidden by the Catholic Religion: to say, There be [are] three Gods, or three Lords.\n21. The Father is made of none: neither created, nor begotten.\n22. The Son is of the Father alone: not made, nor created: but begotten.\n23. The Holy Ghost is of the Father and of the Son: neither made, nor created, nor begotten: but proceeding.\n24. So there is one Father, not three Fathers: one Son, not three Sons: one Holy Ghost, not three Holy Ghosts.\n25. And in this Trinity none is afore, or after another: none is greater, or less than another [there is nothing before, or after: nothing greater or less].\n26. But the whole three Persons are coeternal, and coequal.\n27. So that in all things, as aforesaid: the Unity in Trinity, and the Trinity in Unity, is to be worshiped.\n28. He therefore that will be saved, must [let him] thus think of the Trinity.",
+   "sourceId": "athanasian-creed",
+   "locator": "vv. 1–28",
+   "url": "https://ccel.org/ccel/schaff/creeds2/creeds2.iv.i.iv.html",
+   "tradition": "Ecumenical",
+   "keywords": [
+    "Athanasian Creed",
+    "Quicunque vult",
+    "creed",
+    "ecumenical creed",
+    "Trinity",
+    "three Persons",
+    "one God",
+    "unity in Trinity"
+   ]
+  },
+  {
+   "id": "athanasian-creed:2",
+   "title": "The Athanasian Creed, 29–44 — the Incarnation",
+   "text": "29. Furthermore it is necessary to everlasting salvation: that he also believe rightly [faithfully] the Incarnation of our Lord Jesus Christ.\n30. For the right Faith is, that we believe and confess: that our Lord Jesus Christ, the Son of God, is God and Man;\n31. God, of the Substance [Essence] of the Father; begotten before the worlds: and Man, of the Substance [Essence] of his Mother, born in the world.\n32. Perfect God: and perfect Man, of a reasonable soul and human flesh subsisting.\n33. Equal to the Father, as touching his Godhead: and inferior to the Father as touching his Manhood.\n34. Who although he be [is] God and Man; yet he is not two, but one Christ.\n35. One; not by conversion of the Godhead into flesh: but by taking [assumption] of the Manhood into God.\n36. One altogether; not by confusion of Substance [Essence]: but by unity of Person.\n37. For as the reasonable soul and flesh is one man: so God and Man is one Christ;\n38. Who suffered for our salvation: descended into hell [Hades, spirit-world]: rose again the third day from the dead.\n39. He ascended into heaven, he sitteth on the right hand of the Father God [God the Father] Almighty.\n40. From whence [thence] he shall come to judge the quick and the dead.\n41. At whose coming all men shall rise again with their bodies;\n42. And shall give account for their own works.\n43. And they that have done good shall go into life everlasting: and they that have done evil, into everlasting fire.\n44. This is the Catholic Faith: which except a man believe faithfully [truly and firmly], he can not be saved.",
+   "sourceId": "athanasian-creed",
+   "locator": "vv. 29–44",
+   "url": "https://ccel.org/ccel/schaff/creeds2/creeds2.iv.i.iv.html",
+   "tradition": "Ecumenical",
+   "keywords": [
+    "Athanasian Creed",
+    "Quicunque vult",
+    "creed",
+    "ecumenical creed",
+    "Incarnation",
+    "two natures",
+    "judgment",
+    "resurrection"
+   ]
+  },
+  {
+   "id": "nicaea-325",
+   "title": "The Creed of Nicaea (325)",
+   "text": "We believe in one God, the Father Almighty, maker of all things visible and invisible; and in one Lord Jesus Christ, the Son of God, the only-begotten of his Father, of the substance of the Father, God of God, Light of Light, very God of very God, begotten (γεννηθέντα), not made, being of one substance (ὁμοούσιον, consubstantialem) with the Father. By whom all things were made, both which be in heaven and in earth. Who for us men and for our salvation came down [from heaven] and was incarnate and was made man. He suffered and the third day he rose again, and ascended into heaven. And he shall come again to judge both the quick and the dead. And [we believe] in the Holy Ghost. And whosoever shall say that there was a time when the Son of God was not (ἤν ποτε ὅτε οὐκ ἦν), or that before he was begotten he was not, or that he was made of things that were not, or that he is of a different substance or essence [from the Father] or that he is a creature, or subject to change or conversion — all that so say, the Catholic and Apostolic Church anathematizes them.",
+   "sourceId": "creed-of-nicaea-percival",
+   "authorId": "council-of-nicaea",
+   "locator": "First Council of Nicaea, The Nicene Creed",
+   "url": "https://www.newadvent.org/fathers/3801.htm",
+   "tradition": "Ecumenical",
+   "keywords": [
+    "creed",
+    "ecumenical council",
+    "Nicaea",
+    "Council of Nicaea",
+    "Arius",
+    "Arianism",
+    "homoousios",
+    "of one substance",
+    "creed of 325"
+   ]
+  },
+  {
+   "id": "constantinople-381",
+   "title": "The Nicene-Constantinopolitan Creed (381)",
+   "text": "We believe in one God, the Father Almighty, maker of heaven and earth and of all things visible and invisible. And in one Lord Jesus Christ, the only begotten Son of God, begotten of his Father before all worlds, Light of Light, very God of very God, begotten not made, being of one substance with the Father, by whom all things were made. Who for us men and for our salvation came down from heaven and was incarnate by the Holy Ghost and the Virgin Mary, and was made man, and was crucified also for us under Pontius Pilate. He suffered and was buried, and the third day he rose again according to the Scriptures, and ascended into heaven, and sits at the Right Hand of the Father. And he shall come again with glory to judge both the quick and the dead. Whose kingdom shall have no end.\n\nAnd [we believe] in the Holy Ghost, the Lord and Giver-of-Life, who proceeds from the Father, who with the Father and the Son together is worshipped and glorified, who spoke by the prophets. And [we believe] in one, holy, Catholic and Apostolic Church. We acknowledge one Baptism for the remission of sins, [and] we look for the resurrection of the dead and the life of the world to come. Amen.",
+   "sourceId": "nicene-creed-percival",
+   "authorId": "council-of-constantinople-381",
+   "locator": "First Council of Constantinople, Creed",
+   "url": "https://www.newadvent.org/fathers/3808.htm",
+   "tradition": "Ecumenical",
+   "keywords": [
+    "creed",
+    "ecumenical council",
+    "Nicene Creed",
+    "Niceno-Constantinopolitan Creed",
+    "Constantinople",
+    "proceeds from the Father",
+    "filioque",
+    "Holy Ghost",
+    "one holy catholic and apostolic Church",
+    "creed of 381"
+   ]
+  }
+ ]
+}

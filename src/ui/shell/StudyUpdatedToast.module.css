@@ -1,0 +1,98 @@
+/* In the chat's dock, just above the composer: in flow, so it never covers the header or a message. */
+.region {
+  display: flex;
+  justify-content: center;
+}
+
+.region:not(:empty) {
+  padding: var(--space-2) var(--space-3) 0;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 30rem;
+  width: 100%;
+  min-height: 48px;
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-left: 2px solid var(--color-gold);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-md);
+  animation: toast-in var(--duration-base) var(--ease-out);
+}
+
+.cross {
+  flex: none;
+  color: var(--color-gold);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  color: var(--color-ink-2);
+}
+
+.lead {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.view {
+  flex: none;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-ink);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.view:focus-visible,
+.dismiss:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
+.dismiss {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--color-ink-3);
+}
+
+.dismiss svg {
+  width: 16px;
+  height: 16px;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}

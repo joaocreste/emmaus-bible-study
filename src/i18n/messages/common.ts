@@ -1,0 +1,73 @@
+import { defineMessages } from '../translate';
+
+/**
+ * 'common' namespace — short labels shared across the app (see docs/I18N.md).
+ * `section.<SectionId>` are the dashboard sections' short (navigation) labels, used by the chat's
+ * "Study updated" rows, section links and the phone "Study updated" notice.
+ */
+export const messages = defineMessages({
+  en: {
+    'section.overview': 'Overview',
+    'section.scripture': 'Scripture',
+    'section.key-passages': 'Key passages',
+    'section.cross-references': 'Cross-references',
+    'section.original-languages': 'Original languages',
+    'section.historical-context': 'Context',
+    'section.literary-context': 'Literary',
+    'section.theology': 'Theology',
+    'section.commentary': 'Commentary',
+    'section.sources': 'Sources',
+    'action.tryAgain': 'Try again',
+    'action.close': 'Close',
+    'action.cancel': 'Cancel',
+    'opensInNewTab': '(opens in a new tab)',
+  },
+  pt: {
+    'section.overview': 'Visão geral',
+    'section.scripture': 'Escritura',
+    'section.key-passages': 'Passagens-chave',
+    'section.cross-references': 'Referências cruzadas',
+    'section.original-languages': 'Línguas originais',
+    'section.historical-context': 'Contexto',
+    'section.literary-context': 'Literatura',
+    'section.theology': 'Teologia',
+    'section.commentary': 'Comentário',
+    'section.sources': 'Fontes',
+    'action.tryAgain': 'Tentar de novo',
+    'action.close': 'Fechar',
+    'action.cancel': 'Cancelar',
+    'opensInNewTab': '(abre em uma nova aba)',
+  },
+  fr: {
+    'section.overview': 'Vue d’ensemble',
+    'section.scripture': 'Écriture',
+    'section.key-passages': 'Passages clés',
+    'section.cross-references': 'Références croisées',
+    'section.original-languages': 'Langues originales',
+    'section.historical-context': 'Contexte',
+    'section.literary-context': 'Littéraire',
+    'section.theology': 'Théologie',
+    'section.commentary': 'Commentaires',
+    'section.sources': 'Sources',
+    'action.tryAgain': 'Réessayer',
+    'action.close': 'Fermer',
+    'action.cancel': 'Annuler',
+    'opensInNewTab': '(s’ouvre dans un nouvel onglet)',
+  },
+  es: {
+    'section.overview': 'Panorama',
+    'section.scripture': 'Escritura',
+    'section.key-passages': 'Pasajes clave',
+    'section.cross-references': 'Referencias cruzadas',
+    'section.original-languages': 'Lenguas originales',
+    'section.historical-context': 'Contexto',
+    'section.literary-context': 'Literario',
+    'section.theology': 'Teología',
+    'section.commentary': 'Comentarios',
+    'section.sources': 'Fuentes',
+    'action.tryAgain': 'Intentar de nuevo',
+    'action.close': 'Cerrar',
+    'action.cancel': 'Cancelar',
+    'opensInNewTab': '(se abre en una pestaña nueva)',
+  },
+});

@@ -1,0 +1,76 @@
+.section {
+  /* keeps the heading clear of the sticky study navigation when scrolled into view */
+  scroll-margin-top: 72px;
+  padding-block: var(--space-10) var(--space-6);
+}
+
+.section + .section {
+  border-top: 1px solid var(--color-rule);
+}
+
+/* A section of a generated page that arrived while the reader was already reading. */
+.arrived {
+  animation: emmaus-fade-up var(--duration-slow) var(--ease-out) both;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.headingGroup {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.numeral {
+  flex: none;
+  min-width: 2.25rem;
+  padding-top: 0.55rem;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-gold-ink);
+  letter-spacing: 0.04em;
+}
+
+.title {
+  font-size: var(--text-3xl);
+  color: var(--color-ink);
+}
+
+.description {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-ink-3);
+  max-width: 44rem;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.body {
+  min-width: 0;
+}
+
+@media (max-width: 759px) {
+  .section {
+    padding-block: var(--space-8) var(--space-4);
+  }
+  .title {
+    font-size: var(--text-2xl);
+  }
+  .numeral {
+    display: none;
+  }
+}

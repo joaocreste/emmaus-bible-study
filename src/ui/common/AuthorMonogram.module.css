@@ -1,0 +1,64 @@
+.monogram {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-arch);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface-sunken);
+  color: var(--color-ink-2);
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.sm {
+  width: 28px;
+  height: 34px;
+  font-size: 13px;
+}
+
+.md {
+  width: 40px;
+  height: 48px;
+  font-size: 17px;
+}
+
+.lg {
+  width: 60px;
+  height: 72px;
+  font-size: 24px;
+}
+
+.monogram[data-era='early-church'] {
+  background: var(--color-gold-soft);
+  color: var(--color-gold-ink);
+}
+
+.monogram[data-era='medieval'] {
+  background: var(--color-sage-soft);
+  color: var(--color-sage-ink);
+}
+
+.monogram[data-era='reformation'],
+.monogram[data-era='post-reformation'] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+}
+
+.monogram[data-era='modern'] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-ink);
+}
+
+.monogram[data-era='contemporary'] {
+  background: var(--color-surface-raised);
+  border-color: var(--color-gold);
+  color: var(--color-ink);
+}
+
+.monogram[data-era='ancient'] {
+  background: var(--color-surface-sunken);
+  border-style: dashed;
+  color: var(--color-ink-3);
+}

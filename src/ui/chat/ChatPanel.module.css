@@ -1,0 +1,234 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  container: chat / inline-size;
+}
+
+/* ---------- Header ---------- */
+
+.header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  height: 52px;
+  padding: 0 var(--space-4) 0 var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.heading {
+  flex: none;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: inherit;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+/* focused programmatically when the conversation appears on touch / phone layouts */
+.heading:focus {
+  outline: none;
+}
+
+.heading:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
+}
+
+.studyChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 70%;
+  height: 30px;
+  padding: 0 var(--space-3) 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.studyChip:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-ink);
+}
+
+.studyChip:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-pill);
+}
+
+/* touch: keep the quiet 30px pill but give it a 44px hit area */
+@media (pointer: coarse) {
+  .studyChip {
+    position: relative;
+  }
+  .studyChip::after {
+    content: '';
+    position: absolute;
+    inset: -7px -4px;
+  }
+}
+
+.studyChipIcon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-primary-ink);
+}
+
+.studyChipText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Messages ---------- */
+
+.scroller {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-6) var(--space-5) var(--space-4);
+  scrollbar-gutter: stable;
+}
+
+.log {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.thinking {
+  margin-top: var(--space-6);
+}
+
+/* ---------- New study divider ---------- */
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block: var(--space-2);
+  animation: emmaus-fade-in var(--duration-slow) var(--ease-out);
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--color-rule));
+}
+
+.dividerLine:last-child {
+  background: linear-gradient(to left, transparent, var(--color-rule));
+}
+
+.dividerLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 80%;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+  white-space: nowrap;
+}
+
+.dividerCross {
+  flex: none;
+  color: var(--color-gold);
+}
+
+.dividerTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--color-ink);
+}
+
+/* ---------- Footer: dock (Latest, notices) + composer ---------- */
+
+.footer {
+  position: relative;
+  flex: none;
+}
+
+.dock {
+  display: flex;
+  flex-direction: column;
+}
+
+.jumpRow {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-1) var(--space-4) var(--space-2);
+}
+
+.jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-md);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  animation: emmaus-fade-up var(--duration-base) var(--ease-out);
+}
+
+.jump:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
+}
+
+@media (pointer: coarse) {
+  .jump {
+    height: 44px;
+    padding-inline: var(--space-4);
+  }
+}
+
+.jump svg {
+  width: 14px;
+  height: 14px;
+}
+
+.jump:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (max-width: 759.98px) {
+  .header {
+    height: 48px;
+    padding-inline: var(--space-4) var(--space-3);
+  }
+  .scroller {
+    padding: var(--space-5) var(--space-4) var(--space-4);
+  }
+}

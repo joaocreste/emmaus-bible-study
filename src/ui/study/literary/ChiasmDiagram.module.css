@@ -1,0 +1,158 @@
+.figure {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface-sunken) 35%, var(--color-surface));
+}
+
+.ladder {
+  list-style: none;
+}
+
+/* Each inner level is indented and hangs from a hairline that joins the pair above/below it. */
+.ladder .ladder {
+  position: relative;
+  margin: var(--space-1) 0 var(--space-1) calc(0.8rem - 0.5px);
+  padding-left: calc(0.8rem + 0.5px);
+  border-left: 1px solid color-mix(in srgb, var(--color-gold) 55%, transparent);
+}
+
+.item {
+  position: relative;
+}
+
+.line {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+}
+
+/* short horizontal tick from the connector to the label */
+.ladder .ladder > .item > .line::before {
+  content: '';
+  position: absolute;
+  left: calc(-0.8rem - 0.5px);
+  top: calc(var(--space-1) + 0.8rem);
+  width: calc(0.8rem - 2px);
+  height: 1px;
+  background: color-mix(in srgb, var(--color-gold) 55%, transparent);
+}
+
+.label {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding: 0 0.3rem;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 70%, transparent);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-gold-ink);
+}
+
+.body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  min-width: 0;
+  padding-top: 0.15rem;
+}
+
+.text {
+  font-family: var(--font-sans);
+  font-size: var(--text-reading);
+  line-height: var(--leading-snug);
+  color: var(--color-ink-2);
+}
+
+.ref {
+  display: inline-flex;
+}
+
+/* The centre of the chiasm — where the emphasis often falls */
+.centreLine {
+  margin: var(--space-1) 0;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-highlight);
+  box-shadow: inset 2px 0 0 var(--color-highlight-line);
+}
+
+.centreLine .label {
+  background: var(--color-gold-soft);
+  border-color: var(--color-gold);
+}
+
+.centreLine .text {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.centreTag {
+  flex-basis: 100%;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-gold-ink);
+}
+
+.caption {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-rule);
+  font-size: var(--text-xs);
+  color: var(--color-ink-3);
+}
+
+/* ---------- Generic (non-mirrored) structure ---------- */
+
+.outline {
+  margin-top: var(--space-4);
+  list-style: none;
+}
+
+.outlineNested {
+  margin: var(--space-1) 0 var(--space-1) 0.6rem;
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--color-rule);
+  list-style: none;
+}
+
+.outlineItem + .outlineItem {
+  margin-top: var(--space-1);
+}
+
+.outlineLabel {
+  flex: none;
+  min-width: 1.6rem;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--color-gold-ink);
+}
+
+@media (max-width: 479px) {
+  .figure {
+    padding: var(--space-3);
+  }
+  .ladder .ladder {
+    margin-left: calc(0.55rem - 0.5px);
+    padding-left: calc(0.55rem + 0.5px);
+  }
+  .ladder .ladder > .item > .line::before {
+    left: calc(-0.55rem - 0.5px);
+    width: calc(0.55rem - 2px);
+  }
+}

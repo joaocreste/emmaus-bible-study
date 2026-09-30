@@ -1,0 +1,815 @@
+{
+ "corpus": {
+  "id": "confessions-anglican",
+  "label": "Anglican formularies",
+  "kind": "confession",
+  "sourceId": "thirty-nine-articles",
+  "origin": {
+   "url": "https://ccel.org/ccel/schaff/creeds3",
+   "license": "Public domain (Schaff, The Creeds of Christendom, vol. 3, 1877)",
+   "retrieved": "2026-09-28"
+  }
+ },
+ "documents": [
+  {
+   "id": "39a:1",
+   "title": "Thirty-Nine Articles, Art. 1 — Of Faith in the Holy Trinity",
+   "text": "There is but one living and true God, everlasting, without body, parts, or passions; of infinite power, wisdom, and goodness; the Maker, and Preserver of all things both visible and invisible. And in unity of this Godhead there be three Persons, of one substance, power, and eternity; the Father, the Son, and the Holy Ghost.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 1",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Faith in the Holy Trinity"
+   ]
+  },
+  {
+   "id": "39a:2",
+   "title": "Thirty-Nine Articles, Art. 2 — Of the Word or Son of God, which was made very Man",
+   "text": "The Son, which is the Word of the Father, begotten from everlasting of the Father, the very and eternal God, and of one substance with the Father, took Man's nature in the womb of the blessed Virgin, of her substance: so that two whole and perfect Natures, that is to say, the Godhead and Manhood, were joined together in one Person, never to be divided, whereof is one Christ, very God, and very Man; who truly suffered, was crucified, dead and buried, to reconcile his Father to us, and to be a sacrifice, not only for original guilt, but also for all actual sins of men.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 2",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Word or Son of God, which was made very Man"
+   ]
+  },
+  {
+   "id": "39a:3",
+   "title": "Thirty-Nine Articles, Art. 3 — Of the going down of Christ into Hell",
+   "text": "As Christ died for us, and was buried; so also is it to be believed, that he went down into Hell.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 3",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the going down of Christ into Hell"
+   ]
+  },
+  {
+   "id": "39a:4",
+   "title": "Thirty-Nine Articles, Art. 4 — Of the Resurrection of Christ",
+   "text": "Christ did truly rise again from death, and took again his body, with flesh, bones, and all things appertaining to the perfection of Man's nature; wherewith he ascended into Heaven, and there sitteth, until he return to judge all Men at the last day.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 4",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Resurrection of Christ"
+   ]
+  },
+  {
+   "id": "39a:5",
+   "title": "Thirty-Nine Articles, Art. 5 — Of the Holy Ghost",
+   "text": "The Holy Ghost, proceeding from the Father and the Son, is of one substance, majesty, and glory, with the Father and the Son, very and eternal God.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 5",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Holy Ghost"
+   ]
+  },
+  {
+   "id": "39a:6",
+   "title": "Thirty-Nine Articles, Art. 6 — Of the Sufficiency of the holy Scriptures for salvation",
+   "text": "Holy Scripture containeth all things necessary to salvation: so that whatsoever is not read therein, nor may be proved thereby, is not to be required of any man, that it should be believed as an article of the Faith, or be thought requisite or necessary to salvation. In the name of the Holy Scripture we do understand those canonical Books of the Old and New Testament, of whose authority was never any doubt in the Church.\n\nOf the Names and Number of the Canonical Books.\n\nGenesis, Exodus, Leviticus, Numbers, Deuteronomy, Joshua, Judges, Ruth, The First Book of Samuel, The Second Book of Samuel, The First Book of Kings, The Second Book of Kings, The First Book of Chronicles, The Second Book of Chronicles, The First Book of Esdras, The Second Book of Esdras, The Book of Esther, The Book of Job, The Psalms,\n\nThe Proverbs, Ecclesiastes or Preacher, Cantica, or Songs of Solomon, Four Prophets the greater, Twelve Prophets the less.\n\nAnd the other Books (as Hierome saith) the Church doth read for example of life and instruction of manners; but yet doth it not apply them to establish any doctrine; such are these following:\n\nThe Third Book of Esdras, The Fourth Book of Esdras, The Book of Tobias, The Book of Judith, The rest of the Book of Esther, The Book of Wisdom, Jesus the Son of Sirach, Baruch the Prophet, The Song of the Three Children, The Story of Susanna, Of Bel and the Dragon, The Prayer of Manasses, The First Book of Maccabees, The Second Book of Maccabees.\n\nAll the Books of the New Testament, as they are commonly received, we do receive, and account them Canonical.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 6",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Sufficiency of the holy Scriptures for salvation"
+   ]
+  },
+  {
+   "id": "39a:7",
+   "title": "Thirty-Nine Articles, Art. 7 — Of the Old Testament",
+   "text": "The Old Testament is not contrary to the New: for both in the Old and New Testament everlasting life is offered to Mankind by Christ, who is the only Mediator between God and Man, being both God and Man. Wherefore they are not to be heard, which feign that the old Fathers did look only for transitory promises. Although the Law given from God by Moses, as touching Ceremonies and Rites, do not bind Christian men, nor the Civil precepts thereof ought of necessity to be received in any commonwealth; yet notwithstanding, no Christian man whatsoever is free from the obedience of the Commandments which are called Moral.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 7",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Old Testament"
+   ]
+  },
+  {
+   "id": "39a:8",
+   "title": "Thirty-Nine Articles, Art. 8 — Of the Three Creeds",
+   "text": "The Three Creeds, Nicene Creed, Athanasius's Creed, and that which is commonly called the Apostles' Creed, ought thoroughly to be received and believed: for they may be proved by most certain warrants of Holy Scripture.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 8",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Three Creeds"
+   ]
+  },
+  {
+   "id": "39a:9",
+   "title": "Thirty-Nine Articles, Art. 9 — Of Original or Birth-Sin",
+   "text": "Original Sin standeth not in the following of Adam, (as the Pelagians do vainly talk;) but it is the fault and corruption of the Nature of every man, that naturally is engendered of the offspring of Adam; whereby man is very far gone from original righteousness, and is of his own nature inclined to evil, so that the flesh lusteth always contrary to the spirit; and therefore in every person born into this world, it deserveth God's wrath and damnation. And this infection of nature doth remain, yea in them that are regenerated; whereby the lust of the flesh, called in the Greek, phronema sarkos, (which some do expound the wisdom, some sensuality, some the affection, some the desire, of the flesh,) is not subject to the Law of God. And although there is no condemnation for them that believe and are baptized, yet the Apostle doth confess, that concupiscence and lust hath of itself the nature of sin.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 9",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Original or Birth-Sin"
+   ]
+  },
+  {
+   "id": "39a:10",
+   "title": "Thirty-Nine Articles, Art. 10 — Of Free-Will",
+   "text": "The condition of Man after the fall of Adam is such, that he cannot turn and prepare himself, by his own natural strength and good works, to faith, and calling upon God: Wherefore we have no power to do good works pleasant and acceptable to God, without the grace of God by Christ preventing us, that we may have a good will, and working with us, when we have that good will.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 10",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Free-Will"
+   ]
+  },
+  {
+   "id": "39a:11",
+   "title": "Thirty-Nine Articles, Art. 11 — Of the Justification of Man",
+   "text": "We are accounted righteous before God only for the merit of our Lord and Saviour Jesus Christ by Faith, and not for our own works or deservings. Wherefore, that we are justified by Faith only, is a most wholesome Doctrine, and very full of comfort, as more largely is expressed in the Homily of Justification.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 11",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Justification of Man"
+   ]
+  },
+  {
+   "id": "39a:12",
+   "title": "Thirty-Nine Articles, Art. 12 — Of Good Works",
+   "text": "Albeit that Good Works, which are the fruits of Faith, and follow after Justification, cannot put away our sins, and endure the severity of God's judgment; yet are they pleasing and acceptable to God in Christ, and do spring out necessarily of a true and lively Faith; insomuch that by them a lively Faith may be as evidently known as a tree discerned by the fruit.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 12",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Good Works"
+   ]
+  },
+  {
+   "id": "39a:13",
+   "title": "Thirty-Nine Articles, Art. 13 — Of Works before Justification",
+   "text": "Works done before the grace of Christ, and the Inspiration of his Spirit, are not pleasant to God, forasmuch as they spring not of faith in Jesus Christ; neither do they make men meet to receive grace, or (as the School-authors say) deserve grace of congruity: yea rather, for that they are not done as God hath willed and commanded them to be done, we doubt not but they have the nature of sin.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 13",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Works before Justification"
+   ]
+  },
+  {
+   "id": "39a:14",
+   "title": "Thirty-Nine Articles, Art. 14 — Of Works of Supererogation",
+   "text": "Voluntary Works besides, over and above, God's Commandments, which they call Works of Supererogation, cannot be taught without arrogancy and impiety: for by them men do declare, that they do not only render unto God as much as they are bound to do, but that they do more for his sake, than of bounden duty is required: whereas Christ saith plainly, When ye have done all that are commanded to you, say, We are unprofitable servants.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 14",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Works of Supererogation"
+   ]
+  },
+  {
+   "id": "39a:15",
+   "title": "Thirty-Nine Articles, Art. 15 — Of Christ alone without Sin",
+   "text": "Christ in the truth of our nature was made like unto us in all things, sin only except, from which he was clearly void, both in his flesh, and in his spirit. He came to be the Lamb without spot, who, by sacrifice of himself once made, should take away the sins of the world, and sin (as Saint John saith) was not in him. But all we the rest, although baptized, and born again in Christ, yet offend in many things; and if we say we have no sin, we deceive ourselves, and the truth is not in us.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 15",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Christ alone without Sin"
+   ]
+  },
+  {
+   "id": "39a:16",
+   "title": "Thirty-Nine Articles, Art. 16 — Of Sin after Baptism",
+   "text": "Not every deadly sin willingly committed after Baptism is sin against the Holy Ghost, and unpardonable. Wherefore the grant of repentance is not to be denied to such as fall into sin after Baptism. After we have received the Holy Ghost, we may depart from grace given, and fall into sin, and by the grace of God we may arise again, and amend our lives. And therefore they are to be condemned, which say, they can no more sin as long as they live here, or deny the place of forgiveness to such as truly repent.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 16",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Sin after Baptism"
+   ]
+  },
+  {
+   "id": "39a:17",
+   "title": "Thirty-Nine Articles, Art. 17 — Of Predestination and Election",
+   "text": "Predestination to Life is the everlasting purpose of God, whereby (before the foundations of the world were laid) he hath constantly decreed by his counsel secret to us, to deliver from curse and damnation those whom he hath chosen in Christ out of mankind, and to bring them by Christ to everlasting salvation, as vessels made to honour. Wherefore, they which be endued with so excellent a benefit of God be called according to God's purpose by his Spirit working in due season: they through Grace obey the calling: they be justified freely: they be made sons of God by adoption: they be made like the image of his only-begotten Son Jesus Christ: they walk religiously in good works, and at length, by God's mercy, they attain to everlasting felicity.\n\nAs the godly consideration of Predestination, and our election in Christ, is full of sweet, pleasant, and unspeakable comfort to godly persons, and such as feel in themselves the working of the Spirit of Christ, mortifying the works of the flesh, and their earthly members, and drawing up their mind to high and heavenly things, as well because it doth greatly establish and confirm their faith of eternal Salvation to be enjoyed through Christ, as because it doth fervently kindle their love towards God: So, for curious and carnal persons, lacking the Spirit of Christ, to have continually before their eyes the sentence of God's Predestination, is a most dangerous downfall, whereby the Devil doth thrust them either into desperation, or into wretchlessness of most unclean living, no less perilous than desperation.\n\nFurthermore, we must receive God's promises in such wise, as they be generally set forth to us in holy Scripture: and, in our doings, that Will of God is to be followed, which we have expressly declared unto us in the Word of God.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 17",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Predestination and Election"
+   ]
+  },
+  {
+   "id": "39a:18",
+   "title": "Thirty-Nine Articles, Art. 18 — Of obtaining eternal Salvation only by the Name of Christ",
+   "text": "They also are to be had accursed that presume to say, That every man shall be saved by the Law or Sect which he professeth, so that he be diligent to frame his life according to that Law, and the light of Nature. For holy Scripture doth set out unto us only the Name of Jesus Christ, whereby men must be saved.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 18",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of obtaining eternal Salvation only by the Name of Christ"
+   ]
+  },
+  {
+   "id": "39a:19",
+   "title": "Thirty-Nine Articles, Art. 19 — Of the Church",
+   "text": "The visible Church of Christ is a congregation of faithful men, in the which the pure Word of God is preached, and the Sacraments be duly ministered according to Christ's ordinance, in all those things that of necessity are requisite to the same.\n\nAs the Church of Jerusalem, Alexandria, and Antioch, have erred; so also the Church of Rome hath erred, not only in their living and manner of Ceremonies, but also in matters of Faith.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 19",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Church"
+   ]
+  },
+  {
+   "id": "39a:20",
+   "title": "Thirty-Nine Articles, Art. 20 — Of the Authority of the Church",
+   "text": "The Church hath power to decree Rites or Ceremonies, and authority in Controversies of Faith: And yet it is not lawful for the Church to ordain any thing that is contrary to God's Word written, neither may it so expound one place of Scripture, that it be repugnant to another. Wherefore, although the Church be a witness and a keeper of Holy Writ, yet, as it ought not to decree any thing against the same, so besides the same ought it not to enforce any thing to be believed for necessity of Salvation.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 20",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Authority of the Church"
+   ]
+  },
+  {
+   "id": "39a:21",
+   "title": "Thirty-Nine Articles, Art. 21 — Of the Authority of General Councils",
+   "text": "General Councils may not be gathered together without the commandment and will of Princes. And when they be gathered together, (forasmuch as they be an assembly of men, whereof all be not governed with the Spirit and Word of God,) they may err, and sometimes have erred, even in things pertaining unto God. Wherefore things ordained by them as necessary to salvation have neither strength nor authority, unless it may be declared that they be taken out of holy Scripture.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 21",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Authority of General Councils"
+   ]
+  },
+  {
+   "id": "39a:22",
+   "title": "Thirty-Nine Articles, Art. 22 — Of Purgatory",
+   "text": "The Romish Doctrine concerning Purgatory, Pardons, Worshipping and Adoration, as well of Images as of Reliques, and also invocation of Saints, is a fond thing vainly invented, and grounded upon no warranty of Scripture, but rather repugnant to the Word of God.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 22",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Purgatory"
+   ]
+  },
+  {
+   "id": "39a:23",
+   "title": "Thirty-Nine Articles, Art. 23 — Of Ministering in the Congregation",
+   "text": "It is not lawful for any man to take upon him the office of public preaching, or ministering the Sacraments in the Congregation, before he be lawfully called, and sent to execute the same. And those we ought to judge lawfully called and sent, which be chosen and called to this work by men who have public authority given unto them in the Congregation, to call and send Ministers into the Lord's vineyard.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 23",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Ministering in the Congregation"
+   ]
+  },
+  {
+   "id": "39a:24",
+   "title": "Thirty-Nine Articles, Art. 24 — Of Speaking in the Congregation in such a Tongue as the people understandeth",
+   "text": "It is a thing plainly repugnant to the Word of God, and the custom of the Primitive Church, to have publick Prayer in the Church, or to minister the Sacraments, in a tongue not understanded of the people.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 24",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Speaking in the Congregation in such a Tongue as the people understandeth"
+   ]
+  },
+  {
+   "id": "39a:25",
+   "title": "Thirty-Nine Articles, Art. 25 — Of the Sacraments",
+   "text": "Sacraments ordained of Christ be not only badges or tokens of Christian men's profession, but rather they be certain sure witnesses, and effectual signs of grace, and God's good will towards us, by the which he doth work invisibly in us, and doth not only quicken, but also strengthen and confirm our Faith in him.\n\nThere are two Sacraments ordained of Christ our Lord in the Gospel, that is to say, Baptism, and the Supper of the Lord.\n\nThose five commonly called Sacraments, that is to say, Confirmation, Penance, Orders, Matrimony, and Extreme Unction, are not to be counted for Sacraments of the Gospel, being such as have grown partly of the corrupt following of the Apostles, partly are states of life allowed in the Scriptures; but yet have not like nature of Sacraments with Baptism, and the Lord's Supper, for that they have not any visible sign or ceremony ordained of God.\n\nThe Sacraments were not ordained of Christ to be gazed upon, or to be carried about, but that we should duly use them. And in such only as worthily receive the same, they have a wholesome effect or operation: but they that receive them unworthily, purchase to themselves damnation, as Saint Paul saith.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 25",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Sacraments"
+   ]
+  },
+  {
+   "id": "39a:26",
+   "title": "Thirty-Nine Articles, Art. 26 — Of the Unworthiness of the Ministers, which hinders not the effect of the Sacraments",
+   "text": "Although in the visible Church the evil be ever mingled with the good, and sometimes the evil have chief authority in the Ministration of the Word and Sacraments, yet forasmuch as they do not the same in their own name, but in Christ's, and do minister by his commission and authority, we may use their Ministry, both in hearing the Word of God, and in receiving the Sacraments. Neither is the effect of Christ's ordinance taken away by their wickedness, nor the grace of God's gifts diminished from such as by faith and rightly do receive the Sacraments ministered unto them; which be effectual, because of Christ's institution and promise, although they be ministered by evil men.\n\nNevertheless, it appertaineth to the discipline of the Church, that inquiry be made of evil Ministers, and that they be accused by those that have knowledge of their offences; and finally being found guilty, by just judgment be deposed.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 26",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Unworthiness of the Ministers, which hinders not the effect of the Sacraments"
+   ]
+  },
+  {
+   "id": "39a:27",
+   "title": "Thirty-Nine Articles, Art. 27 — Of Baptism",
+   "text": "Baptism is not only a sign of profession, and mark of difference, whereby Christian men are discerned from others that be not christened, but it is also a sign of Regeneration or new Birth, whereby, as by an instrument, they that receive Baptism rightly are grafted into the Church; the promises of the forgiveness of sin, and of our adoption to be the sons of God by the Holy Ghost, are visibly signed and sealed; Faith is confirmed, and Grace increased by virtue of prayer unto God. The Baptism of young Children is in any wise to be retained in the Church, as most agreeable with the institution of Christ.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 27",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Baptism"
+   ]
+  },
+  {
+   "id": "39a:28",
+   "title": "Thirty-Nine Articles, Art. 28 — Of the Lord's Supper",
+   "text": "The Supper of the Lord is not only a sign of the love that Christians ought to have among themselves one to another; but rather it is a Sacrament of our Redemption by Christ's death: insomuch that to such as rightly, worthily, and with faith, receive the same, the Bread which we break is a partaking of the Body of Christ; and likewise the Cup of Blessing is a partaking of the Blood of Christ.\n\nTransubstantiation (or the change of the substance of Bread and Wine) in the Supper of the Lord, can not be proved by holy Writ; but is repugnant to the plain words of Scripture, overthroweth the nature of a Sacrament, and hath given occasion to many superstitions.\n\nThe Body of Christ is given, taken, and eaten, in the Supper, only after an heavenly spiritual manner. And the mean whereby the Body of Christ is received and eaten in the Supper, is Faith.\n\nThe Sacrament of the Lord's Supper was not by Christ's ordinance reserved, carried about, lifted up, or worshipped.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 28",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Lord's Supper"
+   ]
+  },
+  {
+   "id": "39a:29",
+   "title": "Thirty-Nine Articles, Art. 29 — Of the Wicked which eat not the Body of Christ in the use of the Lord's Supper",
+   "text": "The Wicked, and such as be void of a lively faith, although they do carnally and visibly press with their teeth (as Saint Augustine saith) the Sacrament of the Body and Blood of Christ; yet in no wise are they partakers of Christ: but rather, to their condemnation, do eat and drink the sign or Sacrament of so great a thing.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 29",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Wicked which eat not the Body of Christ in the use of the Lord's Supper"
+   ]
+  },
+  {
+   "id": "39a:30",
+   "title": "Thirty-Nine Articles, Art. 30 — Of both Kinds",
+   "text": "The Cup of the Lord is not to be denied to the Lay-people: for both the parts of the Lord's Sacrament, by Christ's ordinance and commandment, ought to be ministered to all Christian men alike.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 30",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of both Kinds"
+   ]
+  },
+  {
+   "id": "39a:31",
+   "title": "Thirty-Nine Articles, Art. 31 — Of the one Oblation of Christ finished upon the Cross",
+   "text": "The Offering of Christ once made is that perfect redemption, propitiation, and satisfaction, for all the sins of the whole world, both original and actual; and there is none other satisfaction for sin, but that alone. Wherefore the sacrifices of Masses, in the which it was commonly said, that the Priest did offer Christ for the quick and the dead, to have remission of pain or guilt, were blasphemous fables, and dangerous deceits.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 31",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the one Oblation of Christ finished upon the Cross"
+   ]
+  },
+  {
+   "id": "39a:32",
+   "title": "Thirty-Nine Articles, Art. 32 — Of the Marriage of Priests",
+   "text": "Bishops, Priests, and Deacons, are not commanded by God's Law, either to vow the estate of single life, or to abstain from marriage: therefore it is lawful for them, as for all other Christian men, to marry at their own discretion, as they shall judge the same to serve better to godliness.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 32",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Marriage of Priests"
+   ]
+  },
+  {
+   "id": "39a:33",
+   "title": "Thirty-Nine Articles, Art. 33 — Of excommunicate Persons, how they are to be avoided",
+   "text": "That person which by open denunciation of the Church is rightly cut off from the unity of the Church, and excommunicated, ought to be taken of the whole multitude of the faithful, as an Heathen and Publican, until he be openly reconciled by penance, and received into the Church by a Judge that hath authority thereunto.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 33",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of excommunicate Persons, how they are to be avoided"
+   ]
+  },
+  {
+   "id": "39a:34",
+   "title": "Thirty-Nine Articles, Art. 34 — Of the Traditions of the Church",
+   "text": "It is not necessary that Traditions and Ceremonies be in all places one, or utterly like; for at all times they have been divers, and may be changed according to the diversity of countries, times, and men's manners, so that nothing be ordained against God's Word. Whosoever, through his private judgment, willingly and purposely, doth openly break the Traditions and Ceremonies of the Church, which be not repugnant to the Word of God, and be ordained and approved by common authority, ought to be rebuked openly, (that others may fear to do the like,) as he that offendeth against the common order of the Church, and hurteth the authority of the Magistrate, and woundeth the consciences of the weak brethren.\n\nEvery particular or national Church hath authority to ordain, change, and abolish, Ceremonies or Rites of the Church ordained only by man's authority, so that all things be done to edifying.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 34",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Traditions of the Church"
+   ]
+  },
+  {
+   "id": "39a:35",
+   "title": "Thirty-Nine Articles, Art. 35 — Of the Homilies",
+   "text": "The Second Book of Homilies, the several titles whereof we have joined under this Article, doth contain a godly and wholesome Doctrine, and necessary for these times, as doth the former Book of Homilies, which were set forth in the time of Edward the Sixth; and therefore we judge them to be read in Churches by the Ministers, diligently and distinctly, that they may be understanded of the people.\n\nOf the Names of the Homilies.\n\nOf the right Use of the Church.\nAgainst peril of Idolatry.\nOf repairing and keeping clean of Churches.\nOf good Works: first of Fasting.\nAgainst Gluttony and Drunkenness.\nAgainst Excess of Apparel.\nOf Prayer.\nOf the Place and Time of Prayer.\nThat Common Prayers and Sacraments ought to be ministered in a known tongue.\nOf the reverend estimation of God's Word.\nOf Alms-doing.\nOf the Nativity of Christ.\nOf the Passion of Christ.\nOf the Resurrection of Christ.\nOf the worthy receiving of the Sacrament of the Body and Blood of Christ.\nOf the Gifts of the Holy Ghost.\nFor the Rogation-days.\nOf the State of Matrimony.\nOf Repentance.\nAgainst Idleness.\nAgainst Rebellion.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 35",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Homilies"
+   ]
+  },
+  {
+   "id": "39a:36",
+   "title": "Thirty-Nine Articles, Art. 36 — Of Consecration of Bishops and Ministers",
+   "text": "The Book of Consecration of Bishops, and Ordering of Priests and Deacons, lately set forth in the time of Edward the Sixth, and confirmed at the same time by authority of Parliament, doth contain all things necessary to such Consecration and Ordering; neither hath it any thing that, of itself, is superstitious and ungodly. And therefore whosoever are consecrated or ordered according to the Rites of that Book, since the second year of the forenamed King Edward unto this time, or hereafter shall be consecrated or ordered according to the same Rites; we decree all such to be rightly, orderly, and lawfully consecrated and ordered.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 36",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Consecration of Bishops and Ministers"
+   ]
+  },
+  {
+   "id": "39a:37",
+   "title": "Thirty-Nine Articles, Art. 37 — Of the Civil Magistrates",
+   "text": "The Queen's Majesty hath the chief power in this Realm of England, and other her Dominions, unto whom the chief Government of all Estates of this Realm, whether they be Ecclesiastical or Civil, in all causes doth appertain, and is not, nor ought to be, subject to any foreign Jurisdiction.\n\nWhere we attribute to the Queen's Majesty the chief government, by which Titles we understand the minds of some slanderous folks to be offended; we give not our Princes the ministering either of God's Word, or of the Sacraments, the which thing the Injunctions also lately set forth by Elizabeth our Queen do most plainly testify; but that only prerogative, which we see to have been given always to all godly Princes in holy Scriptures by God himself; that is, that they should rule all estates and degrees committed to their charge by God, whether they be Ecclesiastical or Temporal, and restrain with the civil sword the stubborn and evil-doers.\n\nThe Bishop of Rome hath no jurisdiction in this Realm of England.\n\nThe Laws of the Realm may punish Christian men with death, for heinous and grievous offences.\n\nIt is lawful for Christian men, at the commandment of the Magistrate, to wear weapons, and serve in the wars.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 37",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of the Civil Magistrates"
+   ]
+  },
+  {
+   "id": "39a:38",
+   "title": "Thirty-Nine Articles, Art. 38 — Of Christian Men's Goods, which are not common",
+   "text": "The Riches and Goods of Christians are not common, as touching the right, title, and possession of the same; as certain Anabaptists do falsely boast. Notwithstanding, every man ought, of such things as he possesseth, liberally to give alms to the poor, according to his ability.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 38",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of Christian Men's Goods, which are not common"
+   ]
+  },
+  {
+   "id": "39a:39",
+   "title": "Thirty-Nine Articles, Art. 39 — Of a Christian Man's Oath",
+   "text": "As we confess that vain and rash Swearing is forbidden Christian men by our Lord Jesus Christ, and James His Apostle, so we judge, that Christian Religion doth not prohibit, but that a man may swear when the Magistrate requireth, in a cause of faith and charity, so it be done according to the Prophet's teaching in justice, judgment, and truth.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Art. 39",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "Of a Christian Man's Oath"
+   ]
+  },
+  {
+   "id": "39a:ratification",
+   "title": "Thirty-Nine Articles — The Ratification",
+   "text": "This Book of Articles before rehearsed, is again approved, and allowed to be holden and executed within the Realm, by the assent and consent of our Sovereign Lady ELIZABETH, by the grace of God, of England, France, and Ireland, Queen, Defender of the Faith, &c. Which Articles were deliberately read, and confirmed again by the subscription of the hands of the Archbishop and Bishops of the Upper-house, and by the subscription of the whole Clergy of the Nether-house in their Convocation, in the Year of our Lord 1571.",
+   "sourceId": "thirty-nine-articles",
+   "authorId": "church-of-england",
+   "locator": "Ratification",
+   "url": "https://en.wikisource.org/wiki/Book_of_Common_Prayer_(1863)/Articles_of_Religion",
+   "tradition": "Anglican",
+   "keywords": [
+    "Thirty-Nine Articles",
+    "39 Articles",
+    "Articles of Religion",
+    "Church of England",
+    "Book of Common Prayer",
+    "Anglican",
+    "Episcopal",
+    "The Ratification"
+   ]
+  }
+ ]
+}

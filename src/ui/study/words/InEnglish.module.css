@@ -1,0 +1,10 @@
+.mark {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--color-ink-3);
+  white-space: nowrap;
+}

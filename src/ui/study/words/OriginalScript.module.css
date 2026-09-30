@@ -1,0 +1,44 @@
+.script {
+  display: inline-block;
+  color: var(--color-ink);
+  font-weight: 400;
+  line-height: 1.25;
+  unicode-bidi: isolate;
+}
+
+.greek {
+  font-family: var(--font-greek);
+}
+
+.hebrew,
+.aramaic {
+  font-family: var(--font-hebrew);
+  line-height: 1.4;
+}
+
+.md.greek {
+  font-size: 1.15em;
+}
+
+.md.hebrew,
+.md.aramaic {
+  font-size: 1.2em;
+}
+
+.lg.greek {
+  font-size: 1.625rem;
+}
+
+.lg.hebrew,
+.lg.aramaic {
+  font-size: 1.75rem;
+}
+
+.xl.greek {
+  font-size: 1.875rem; /* 30px */
+}
+
+.xl.hebrew,
+.xl.aramaic {
+  font-size: 2rem; /* 32px */
+}

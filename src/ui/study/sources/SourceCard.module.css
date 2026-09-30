@@ -1,0 +1,130 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* editions and attributions can carry long URLs */
+  overflow-wrap: anywhere;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+  list-style: none;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+
+.title {
+  flex: 1 1 14rem;
+  min-width: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: var(--leading-snug);
+  font-variation-settings: 'opsz' 18;
+}
+
+.titleButton {
+  composes: touch-target from global;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-ink);
+  font: inherit;
+  text-align: left;
+  font-style: italic;
+  text-decoration: underline;
+  text-decoration-color: var(--color-border-strong);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color var(--duration-fast) var(--ease-out);
+}
+
+.titleButton:hover {
+  color: var(--color-primary-ink);
+  text-decoration-color: currentColor;
+}
+
+.byline {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-ink-2);
+}
+
+.description {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--color-ink-3);
+}
+
+.facts {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-3) 0 var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-rule);
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+}
+
+.fact dt {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: var(--text-2xs);
+  color: var(--color-ink-3);
+  padding-top: 1px;
+}
+
+.fact dd {
+  margin: 0;
+  color: var(--color-ink-2);
+}
+
+.link {
+  composes: touch-target from global;
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  margin-top: auto;
+  padding-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary-ink);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.linkIcon {
+  width: 15px;
+  height: 15px;
+}
+
+@media (max-width: 479px) {
+  .card {
+    padding: var(--space-4);
+  }
+  .fact {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

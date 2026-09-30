@@ -1,0 +1,52 @@
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-sans);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--kind-color, var(--color-ink-3));
+  white-space: nowrap;
+}
+
+.icon {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+.verification {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--color-ink-3);
+}
+
+.unverified {
+  color: var(--color-danger);
+}
+
+.tag[data-kind='scripture'] { --kind-color: var(--kind-scripture); }
+.tag[data-kind='original-text'] { --kind-color: var(--kind-original); }
+.tag[data-kind='lexical'] { --kind-color: var(--kind-lexical); }
+.tag[data-kind='historical'] { --kind-color: var(--kind-historical); }
+.tag[data-kind='literary'] { --kind-color: var(--kind-literary); }
+.tag[data-kind='commentary'] { --kind-color: var(--kind-commentary); }
+.tag[data-kind='quotation'] { --kind-color: var(--kind-quotation); }
+.tag[data-kind='summary'] { --kind-color: var(--kind-summary); }
+.tag[data-kind='synthesis'] { --kind-color: var(--kind-synthesis); }
+.tag[data-kind='dataset'] { --kind-color: var(--kind-dataset); }
+
+/* Composed live by the inference layer: synthesis colour, a dashed rule under the label
+   (the same dashed rule marks generated blocks), and "not reviewed" always visible. */
+.tag[data-verification='generated'] {
+  --kind-color: var(--kind-synthesis);
+  padding-bottom: 1px;
+  border-bottom: 1px dashed color-mix(in srgb, var(--kind-synthesis) 70%, transparent);
+}
+
+.tag[data-verification='generated'] .verification {
+  color: var(--kind-synthesis);
+}

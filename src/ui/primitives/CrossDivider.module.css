@@ -1,0 +1,27 @@
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-10) auto;
+  max-width: 22rem;
+  color: var(--color-gold);
+}
+
+.compact {
+  margin: var(--space-6) auto;
+  max-width: 12rem;
+}
+
+.line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to var(--dir, right), transparent, var(--color-rule));
+}
+
+.line:last-child {
+  --dir: left;
+}
+
+.cross {
+  flex: none;
+}

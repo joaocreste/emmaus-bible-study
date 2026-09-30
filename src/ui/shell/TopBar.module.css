@@ -1,0 +1,286 @@
+.bar {
+  --bar-lead: auto;
+  position: relative;
+  z-index: var(--z-topbar);
+  display: grid;
+  grid-template-columns: var(--bar-lead) minmax(0, 1fr) auto;
+  align-items: center;
+  height: var(--topbar-height);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* In the split layout the brand cell spans exactly the conversation column, so the study title lines up with the study. */
+.aligned {
+  --bar-lead: var(--chat-col);
+}
+
+.lead {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+  padding-inline: var(--space-4);
+}
+
+.aligned .lead {
+  border-right: 1px solid var(--color-border);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 44px;
+  padding: 0 var(--space-2) 0 var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-primary-ink);
+}
+
+.brand:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.emblem {
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.brand:hover .emblem {
+  transform: translateY(-1px);
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  /* optical balance for the trailing tracking */
+  margin-right: -0.2em;
+}
+
+.middle {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  padding-inline: var(--space-5) var(--space-3);
+}
+
+.study {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-width: 0;
+  animation: emmaus-fade-in var(--duration-slow) var(--ease-out);
+}
+
+.studyEyebrow {
+  flex: none;
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-gold-ink);
+}
+
+.studyTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-ink);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline: var(--space-2) var(--space-4);
+}
+
+.search {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 38px;
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  color: var(--color-ink-3);
+  font-size: var(--text-sm);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.search:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-ink-2);
+  background: var(--color-surface-raised);
+}
+
+.search:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-pill);
+}
+
+.searchIcon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.searchLabel {
+  white-space: nowrap;
+}
+
+.searchLong {
+  display: none;
+}
+
+.searchWide {
+  min-width: 18rem;
+}
+
+.searchWide .searchShort {
+  display: none;
+}
+
+.searchWide .searchLong {
+  display: inline;
+}
+
+.searchWide .kbd {
+  margin-left: auto;
+}
+
+/* Narrow desktop split view (1180–1365px): a compact "Search ⌘K" field leaves the study title room. */
+@media (max-width: 1365.98px) {
+  .aligned .searchWide {
+    min-width: 0;
+  }
+  .aligned .searchWide .searchLong {
+    display: none;
+  }
+  .aligned .searchWide .searchShort {
+    display: inline;
+  }
+}
+
+/* Tablet split view: give the study title room — the search collapses to an icon and the eyebrow hides. */
+@media (max-width: 1179.98px) {
+  .aligned .studyEyebrow {
+    display: none;
+  }
+  /* an icon button like its neighbours — not a filled field that looks pressed */
+  .aligned .search:not(.searchWide) {
+    width: 38px;
+    padding: 0;
+    justify-content: center;
+    border-color: transparent;
+    background: transparent;
+    color: var(--color-ink-2);
+  }
+  .aligned .search:not(.searchWide):hover {
+    border-color: transparent;
+    background: var(--color-surface-sunken);
+    color: var(--color-ink);
+  }
+  .aligned .search:not(.searchWide) .searchLabel,
+  .aligned .search:not(.searchWide) .kbd {
+    display: none;
+  }
+}
+
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--color-border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-raised);
+  color: var(--color-ink-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.newStudy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 38px;
+  padding: 0 var(--space-4) 0 var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.newStudy svg {
+  width: 16px;
+  height: 16px;
+  color: var(--color-primary-ink);
+}
+
+.newStudy:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-ink);
+}
+
+.newStudy:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-pill);
+}
+
+@media (max-width: 759.98px) {
+  .lead {
+    padding-inline: var(--space-3) 0;
+  }
+  .wordmark {
+    font-size: 1.0625rem;
+  }
+  .actions {
+    gap: 2px;
+    padding-inline: 0 var(--space-2);
+  }
+  /* 44px touch targets; specific enough to beat IconButton's size classes, and reaching Aa inside its anchor */
+  .bar .actions > button,
+  .bar .actions > div > button {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Touch screens in the split layouts (iPad): 44px tall controls in the bar. */
+@media (pointer: coarse) and (min-width: 760px) {
+  .bar .actions > button,
+  .bar .actions > div > button {
+    min-width: 44px;
+    height: 44px;
+  }
+}

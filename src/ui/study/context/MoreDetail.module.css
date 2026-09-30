@@ -1,0 +1,46 @@
+.more {
+  margin-top: var(--space-2);
+}
+
+/* Compact trigger: label + chevron, not a full-width bar */
+.more > button {
+  display: inline-flex;
+  width: auto;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-1);
+  min-height: 32px;
+  padding: var(--space-1) 0;
+  color: var(--color-primary-ink);
+}
+
+.more > button:hover {
+  color: var(--color-primary-hover);
+}
+
+.more > button > svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 0;
+  color: currentColor;
+}
+
+.summary {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.panel {
+  padding: var(--space-2) 0 var(--space-1);
+}
+
+.panel > p + p {
+  margin-top: var(--space-3);
+}
+
+@media (pointer: coarse) {
+  .more > button {
+    min-height: 44px;
+  }
+}

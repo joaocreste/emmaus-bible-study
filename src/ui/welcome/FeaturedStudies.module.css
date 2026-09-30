@@ -1,0 +1,292 @@
+.featured {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-6);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 600;
+}
+
+.sub {
+  max-width: 30rem;
+  font-size: var(--text-sm);
+  color: var(--color-ink-3);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+  list-style: none;
+}
+
+/* Large phones: two columns; with an odd count the first card spans both (no orphan). */
+@media (min-width: 480px) and (max-width: 759.98px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid[data-odd] > .cell:first-child {
+    grid-column: span 2;
+  }
+}
+
+/* Tablet and up: six columns — rows of two wide cards, then rows of three (see cardSpans). */
+@media (min-width: 760px) {
+  .grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .cell[data-span='2'] {
+    grid-column: span 2;
+  }
+  .cell[data-span='3'] {
+    grid-column: span 3;
+  }
+  .cell[data-span='6'] {
+    grid-column: span 6;
+  }
+}
+
+.cell {
+  display: flex;
+}
+
+/* ---------- Card ---------- */
+
+.card {
+  --tint: var(--color-primary-soft);
+  --tint-ink: var(--color-primary-ink);
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+  transition:
+    box-shadow var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out);
+}
+
+.card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.card:has(.open:focus-visible) {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 3px;
+}
+
+.terracotta {
+  --tint: var(--color-accent-soft);
+  --tint-ink: var(--color-accent-ink);
+}
+
+.sage {
+  --tint: var(--color-sage-soft);
+  --tint-ink: var(--color-sage-ink);
+}
+
+.sand {
+  --tint: var(--color-gold-soft);
+  --tint-ink: var(--color-gold-ink);
+}
+
+/* Tinted band with an arch-shaped window standing on its lower edge */
+.band {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 104px;
+  padding-top: var(--space-4);
+  background: var(--tint);
+  border-bottom: 1px solid color-mix(in srgb, var(--tint-ink) 18%, transparent);
+}
+
+.arch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  width: 76px;
+  height: 84px;
+  padding-bottom: var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--tint-ink) 30%, transparent);
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0;
+  background: color-mix(in srgb, var(--color-surface) 55%, var(--tint));
+  color: var(--tint-ink);
+}
+
+.archTop {
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.archMain {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: lining-nums;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.kind {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--tint-ink);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+/* The title button stretches over the whole card (one tab stop, whole card clickable). */
+.open {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-ink);
+  font: inherit;
+  text-align: left;
+}
+
+.open::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.open:focus-visible {
+  outline: none;
+}
+
+.open:disabled {
+  cursor: progress;
+}
+
+.subtitle {
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--color-ink-2);
+}
+
+.excerpt {
+  margin: var(--space-2) 0 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.verse {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.versePlaceholder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-block: 6px;
+}
+
+.versePlaceholder span {
+  height: 9px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+}
+
+.versePlaceholder span:last-child {
+  width: 62%;
+}
+
+.verseRef {
+  margin-top: var(--space-2);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: var(--space-4);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary-ink);
+}
+
+.cta svg {
+  width: 15px;
+  height: 15px;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.card:hover .cta svg {
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card:hover {
+    transform: none;
+  }
+}

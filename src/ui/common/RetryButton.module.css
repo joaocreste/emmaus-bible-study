@@ -1,0 +1,28 @@
+.retry {
+  composes: touch-target from global;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  margin-inline-start: var(--space-1);
+  padding: 2px var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-style: normal;
+  color: var(--color-primary-ink);
+  vertical-align: middle;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.retry:hover {
+  border-color: var(--color-primary);
+}
+
+.retry :global(svg) {
+  width: 13px;
+  height: 13px;
+}

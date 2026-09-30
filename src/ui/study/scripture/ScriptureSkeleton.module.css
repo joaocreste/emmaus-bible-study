@@ -1,0 +1,37 @@
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--text-scripture) * 0.9);
+  max-width: var(--reading-measure);
+  padding: var(--space-2) 0 var(--space-2) var(--space-5);
+}
+
+.line {
+  display: block;
+  height: calc(var(--text-scripture) * 0.62);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-sunken);
+  animation: breathe 1.8s var(--ease-in-out) infinite both;
+}
+
+.gap {
+  display: block;
+  height: var(--space-2);
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line {
+    animation: none;
+    opacity: 0.8;
+  }
+}

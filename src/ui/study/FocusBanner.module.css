@@ -1,0 +1,85 @@
+/* A quiet leaf with a gold rule and a small cross — gold stays an accent, not a surface. */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-inline-start: 2px solid var(--color-gold);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: var(--color-surface);
+  animation: emmaus-fade-up var(--duration-base) var(--ease-out);
+}
+
+.cross {
+  flex: none;
+  color: var(--color-gold-ink);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--color-ink);
+}
+
+.clear {
+  composes: touch-target from global;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-ink-2);
+  white-space: nowrap;
+}
+
+.clear:hover {
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+}
+
+.clear :global(svg) {
+  width: 13px;
+  height: 13px;
+}
+
+/* Phones and short screens: one line, so the sticky chrome leaves room to read.
+   (The full reason is announced, kept in the title, and listed under the chat reply.) */
+@media (max-width: 759.98px), (max-height: 520px) {
+  .banner {
+    padding-block: 2px;
+  }
+
+  .text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 479px) {
+  .clear span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .clear {
+    width: 36px;
+    justify-content: center;
+    padding: 0;
+  }
+}

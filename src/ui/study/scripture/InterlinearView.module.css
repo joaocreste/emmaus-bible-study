@@ -1,0 +1,289 @@
+.interlinear {
+  max-width: 56rem;
+}
+
+.chapter + .chapter {
+  margin-top: var(--space-10);
+}
+
+.chapterHeading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.chapterHeading::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-rule);
+}
+
+.verse {
+  position: relative;
+  padding: var(--space-4) 0 var(--space-5) var(--space-5);
+  scroll-margin-top: var(--space-8);
+}
+
+.verse + .verse {
+  border-top: 1px solid color-mix(in srgb, var(--color-rule) 60%, transparent);
+}
+
+.verseHl {
+  background: linear-gradient(to right, var(--color-highlight), color-mix(in srgb, var(--color-highlight) 30%, transparent));
+  border-radius: var(--radius-sm);
+}
+
+.verseHl::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 2px;
+  top: var(--space-3);
+  bottom: var(--space-3);
+  width: 3px;
+  border-radius: 2px;
+  background: var(--color-highlight-line);
+}
+
+.english {
+  max-width: var(--reading-measure);
+  margin-bottom: var(--space-3);
+  font-family: var(--font-serif);
+  font-size: calc(var(--text-scripture) * 0.9);
+  line-height: 1.6;
+  color: var(--color-ink);
+}
+
+.numBtn {
+  position: relative;
+  top: -0.55em;
+  display: inline-block;
+  margin: 0 0.2em 0 -0.2em;
+  padding: 0.14em 0.22em;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 0.6em;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-gold-ink);
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
+.numBtn:hover,
+.numBtn[aria-expanded='true'] {
+  background: var(--color-gold-soft);
+}
+
+@media (pointer: coarse) {
+  .numBtn::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.keyWord {
+  display: inline;
+  margin: 0;
+  padding: 0 0.04em;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline dotted var(--color-accent-line);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.24em;
+  cursor: pointer;
+}
+
+.keyWord:hover {
+  background: var(--color-accent-soft);
+}
+
+.keyWordFocused {
+  background: var(--color-word-highlight);
+  text-decoration-style: solid;
+}
+
+/* ---------- Word stacks ---------- */
+
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-1);
+  list-style: none;
+}
+
+.stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 3.25rem;
+  padding: var(--space-1) var(--space-2) var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  text-align: center;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+
+.stack:hover {
+  background: var(--color-surface-raised);
+  border-color: var(--color-border);
+}
+
+.stack:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+  border-radius: var(--radius-sm);
+}
+
+.stackKey .orig {
+  text-decoration: underline dotted var(--color-accent-line);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.3em;
+}
+
+.stackFocused {
+  background: var(--color-word-highlight);
+  border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+.stackFocused:hover {
+  background: var(--color-word-highlight);
+}
+
+.orig {
+  color: var(--color-ink);
+  line-height: 1.35;
+}
+
+.origGreek {
+  font-family: var(--font-greek);
+  font-size: calc(1.3rem * var(--reader-scale));
+}
+
+.origHebrew {
+  font-family: var(--font-hebrew);
+  font-size: calc(1.4rem * var(--reader-scale));
+}
+
+/* Transliteration and gloss follow the reader's text size; Strong's numbers grow a little. */
+.translit {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: calc(var(--text-xs) * var(--reader-scale));
+  color: var(--color-ink-2);
+}
+
+/* the stressed syllable, where the tagged text marks it */
+.stress {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--color-ink-3);
+  text-underline-offset: 0.2em;
+}
+
+.gloss {
+  max-width: calc(9rem * var(--reader-scale));
+  font-family: var(--font-sans);
+  font-size: calc(var(--text-xs) * var(--reader-scale));
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--color-ink);
+}
+
+/* in the original, usually left untranslated in English */
+.implied {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--color-ink-3);
+}
+
+/* supplied in English for sense */
+.added {
+  font-weight: 400;
+  color: var(--color-ink-3);
+}
+
+/* joins the parts of one Hebrew word ("he leads · me") */
+.join {
+  font-weight: 400;
+  color: var(--color-ink-3);
+}
+
+.strong {
+  font-family: var(--font-sans);
+  font-size: calc(var(--text-2xs) * min(var(--reader-scale), 1.15));
+  letter-spacing: 0.03em;
+  color: var(--color-gold-ink);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.wordsLoading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.stackSkeleton {
+  width: 3.5rem;
+  height: 4.25rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-sunken);
+  animation: shimmer 1.6s var(--ease-in-out) infinite;
+}
+
+@keyframes shimmer {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stackSkeleton {
+    animation: none;
+  }
+}
+
+.missing,
+.error {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--color-ink-3);
+}
+
+.error {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+@media (pointer: coarse) {
+  .stack {
+    min-height: 44px;
+  }
+}

@@ -1,0 +1,322 @@
+.reader {
+  --rule-gutter: var(--space-5);
+  max-width: var(--reading-measure);
+  padding-inline-start: var(--rule-gutter);
+  font-family: var(--font-serif);
+  font-size: var(--text-scripture);
+  line-height: var(--leading-reading);
+  font-variation-settings: 'opsz' 18;
+  color: var(--color-ink);
+  hanging-punctuation: first;
+  overflow-wrap: break-word;
+}
+
+.plain {
+  --rule-gutter: 0px;
+  font-size: calc(var(--text-scripture) * 0.94);
+}
+
+.chapter + .chapter {
+  margin-top: var(--space-10);
+}
+
+.chapterHeading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+}
+
+.chapterHeading::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-rule);
+}
+
+/* Translation section headings — serif small caps in olive */
+.heading {
+  margin: 1.5em 0 0.45em;
+  font-family: var(--font-serif);
+  font-size: 0.92em;
+  font-weight: 600;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+  line-height: var(--leading-snug);
+  color: var(--color-primary-ink);
+}
+
+.chapter > .heading:first-child,
+.chapterHeading + .heading {
+  margin-top: 0;
+}
+
+/* Ancient psalm title ("A Psalm of David.") */
+.superscription {
+  margin: 0 0 0.9em;
+  font-size: 0.86em;
+  font-style: italic;
+  line-height: var(--leading-snug);
+  color: var(--color-ink-2);
+}
+
+.para {
+  margin: 0 0 0.85em;
+}
+
+.poetry {
+  /* verse numerals hang in their own column so every flush line aligns */
+  --num-col: calc(var(--text-scripture) * 1.35);
+  margin: 0 0 0.85em;
+}
+
+.poetryVerse {
+  display: block;
+}
+
+/* Poetry: each line a block. Poetic indents start at +1em / +2em; text that wraps hangs
+   deeper (+2.5em or more), so a wrapped continuation never looks like the next line. */
+.line {
+  display: block;
+  padding-inline-start: calc(var(--num-col) + 2.5em);
+  text-indent: -2.5em;
+}
+
+.indent1 {
+  padding-inline-start: calc(var(--num-col) + 3.5em);
+}
+
+.indent2 {
+  padding-inline-start: calc(var(--num-col) + 4.5em);
+}
+
+.lineNumbered {
+  text-indent: calc(-2.5em - var(--num-col));
+}
+
+.poetry .num,
+.poetry .numBtn {
+  box-sizing: border-box;
+  display: inline-block;
+  width: var(--num-col);
+  margin: 0;
+  padding: 0.14em 0.5em 0.14em 0;
+  text-align: end;
+  text-indent: 0;
+}
+
+.verse,
+.poetryVerse {
+  scroll-margin-top: var(--space-16);
+}
+
+/* A verse number and the verse's first word share a line. */
+.verseStart {
+  white-space: nowrap;
+}
+
+/* ---------- Verse numbers (gold, sans, not selectable) ---------- */
+
+.num,
+.numBtn {
+  position: relative;
+  top: -0.62em;
+  font-family: var(--font-sans);
+  font-size: 0.56em;
+  font-weight: 700;
+  font-variant-numeric: lining-nums;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--color-gold-ink);
+  vertical-align: baseline;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.num {
+  margin-inline-end: 0.22em;
+}
+
+.numBtn {
+  display: inline-block;
+  margin: 0 0.12em 0 -0.18em;
+  padding: 0.14em 0.22em;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  text-indent: 0;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.numBtn:hover,
+.numBtn[aria-expanded='true'] {
+  background: var(--color-gold-soft);
+}
+
+.numBtn:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+  border-radius: 4px;
+}
+
+@media (pointer: coarse) {
+  /* ≈44px hit area without changing the typography (docs/DESIGN.md §4) */
+  .numBtn::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* ---------- Translation footnotes ---------- */
+
+.noteBtn {
+  position: relative;
+  top: -0.5em;
+  display: inline-block;
+  margin-inline: 0.08em 0.1em;
+  padding: 0 0.18em;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 0.6em;
+  font-weight: 700;
+  line-height: 1;
+  text-indent: 0;
+  color: var(--color-ink-3);
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  .noteBtn::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.noteBtn:hover,
+.noteBtn[aria-expanded='true'] {
+  background: var(--color-surface-sunken);
+  color: var(--color-ink);
+}
+
+.noteText {
+  display: inline;
+  margin-inline: 0.15em 0.3em;
+  padding: 0.1em 0.45em;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-sunken);
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-style: normal;
+  line-height: 1.5;
+  text-indent: 0;
+  color: var(--color-ink-2);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.noteText[hidden] {
+  display: none;
+}
+
+/* ---------- Key words ---------- */
+
+.keyWord {
+  display: inline;
+  margin: 0;
+  padding: 0 0.04em;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  text-align: inherit;
+  text-indent: 0;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--color-accent-line);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.24em;
+  cursor: pointer;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    text-decoration-color var(--duration-fast) var(--ease-out);
+}
+
+.keyWord:hover {
+  background: var(--color-accent-soft);
+  text-decoration-color: var(--color-accent);
+}
+
+.keyWord:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+
+.keyWordFocused {
+  background: var(--color-word-highlight);
+  text-decoration-style: solid;
+  text-decoration-color: var(--color-accent);
+}
+
+.keyWordFocused:hover {
+  background: var(--color-word-highlight);
+}
+
+/* ---------- Focused verses: highlight band + gold rule in the margin ---------- */
+
+.verseHl {
+  background: var(--color-highlight);
+  box-shadow: 0 0 0 0.14em var(--color-highlight);
+  border-radius: 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.verseHlBlock {
+  position: relative;
+}
+
+.marked {
+  position: relative;
+}
+
+.marked::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: calc(-1 * var(--rule-gutter) + 2px);
+  top: 0.3em;
+  bottom: 0.3em;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--color-highlight-line);
+  animation: emmaus-fade-in var(--duration-slow) var(--ease-out);
+}
+
+.plain .marked::before {
+  display: none;
+}

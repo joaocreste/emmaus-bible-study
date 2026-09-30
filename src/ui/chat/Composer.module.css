@@ -1,0 +1,99 @@
+.composer {
+  flex: none;
+  padding: var(--space-3) var(--space-4) var(--space-3);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.field {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  padding: 7px 7px 7px var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-xs);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.field:focus-within {
+  border-color: var(--color-primary);
+}
+
+/* The textarea itself draws no outline: the field carries the standard gold focus ring (docs/DESIGN.md §10).
+   Only for the textarea — the send button has its own ring. */
+.field:has(.textarea:focus-visible) {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 38px;
+  max-height: 168px;
+  padding: 8px 0 7px;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-size: 0.96875rem;
+  line-height: 1.45;
+  resize: none;
+  overflow-y: hidden;
+}
+
+.textarea::placeholder {
+  color: var(--color-ink-3);
+  opacity: 1;
+}
+
+.textarea:focus,
+.textarea:focus-visible {
+  outline: none;
+}
+
+.send {
+  flex: none;
+}
+
+.send:disabled {
+  opacity: 0.35;
+}
+
+.hint {
+  margin-top: var(--space-2);
+  padding-left: var(--space-1);
+  font-size: var(--text-2xs);
+  color: var(--color-ink-3);
+}
+
+.hint kbd {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: var(--color-ink-2);
+}
+
+/* touch: 44px targets (docs/DESIGN.md §4) */
+@media (pointer: coarse) {
+  .composer .field .send {
+    width: 44px;
+    height: 44px;
+  }
+  .textarea {
+    min-height: 44px;
+    padding-block: 11px 10px;
+  }
+}
+
+@media (max-width: 759.98px) {
+  .composer {
+    padding: var(--space-2) var(--space-3) var(--space-3);
+  }
+  /* 16px avoids iOS zooming into the field */
+  .textarea {
+    font-size: 1rem;
+  }
+}

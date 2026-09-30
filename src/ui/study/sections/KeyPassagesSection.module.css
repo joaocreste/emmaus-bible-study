@@ -1,0 +1,20 @@
+.orientation {
+  margin-bottom: var(--space-10);
+}
+
+.question {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-2xl);
+  color: var(--color-ink);
+  max-width: 40rem;
+}
+
+.group + .group {
+  margin-top: var(--space-10);
+}
+
+.list {
+  display: grid;
+  gap: var(--space-4);
+  list-style: none;
+}

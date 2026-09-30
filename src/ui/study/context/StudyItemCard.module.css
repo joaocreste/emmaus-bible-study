@@ -1,0 +1,75 @@
+.item {
+  position: relative;
+  min-width: 0;
+  list-style: none;
+  animation: emmaus-fade-up var(--duration-slow) var(--ease-out) both;
+}
+
+.card {
+  padding: var(--space-5) var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  transition:
+    border-color var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out);
+}
+
+.plain {
+  padding: 0;
+}
+
+/* Items touched by the conversation: warm gold rule on the leading edge. */
+.card.updated,
+.card.pinned {
+  border-color: color-mix(in srgb, var(--color-gold) 45%, var(--color-border));
+  box-shadow:
+    inset 3px 0 0 var(--color-highlight-line),
+    var(--shadow-sm);
+}
+
+.plain.updated,
+.plain.pinned {
+  box-shadow: inset 3px 0 0 var(--color-highlight-line);
+  padding-left: var(--space-4);
+}
+
+.pulse {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: emmaus-pulse 1.3s var(--ease-out) 2;
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-gold-ink);
+}
+
+.markCross {
+  flex: none;
+  color: var(--color-gold);
+}
+
+@media (max-width: 759px) {
+  .card {
+    padding: var(--space-4) var(--space-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item,
+  .pulse {
+    animation: none;
+  }
+}

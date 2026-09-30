@@ -1,0 +1,21 @@
+.wrap {
+  max-width: var(--reading-measure);
+}
+
+.note {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-ink-3);
+}
+
+.more {
+  margin-top: var(--space-3);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-ink-3);
+}

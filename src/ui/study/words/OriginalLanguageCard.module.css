@@ -1,0 +1,76 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  height: 100%;
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+  scroll-margin-top: var(--space-4);
+  transition:
+    border-color var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out);
+}
+
+.card:hover {
+  border-color: var(--color-border-strong);
+}
+
+.highlighted {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  box-shadow:
+    inset 0 3px 0 var(--color-accent-line),
+    var(--shadow-md);
+}
+
+.updated:not(.highlighted) {
+  border-color: color-mix(in srgb, var(--color-gold) 55%, var(--color-border));
+}
+
+.pulse {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: emmaus-pulse 1.6s var(--ease-out) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}
+
+.updatedLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: calc(-1 * var(--space-2));
+  font-family: var(--font-sans);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-gold-ink);
+}
+
+.updatedLabel :global(svg) {
+  color: var(--color-gold);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-2);
+}
+
+@container words (max-width: 26rem) {
+  .card {
+    padding: var(--space-4);
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "emmaus-bible-study",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Emmaus — a conversational Bible study and theological research workspace (local MVP).",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "data:build": "node scripts/data/build-all.ts",
+    "kb:build": "node scripts/kb/build.ts",
+    "test:e2e": "playwright test",
+    "predev": "node scripts/ensure-data.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
+    "@fontsource-variable/literata": "^5.3.0",
+    "@fontsource-variable/noto-serif-hebrew": "^5.3.0",
+    "@fontsource-variable/source-sans-3": "^5.3.0",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/gentium-book-plus": "^5.3.0",
+    "lucide-react": "^1.48.0",
+    "minisearch": "^7.2.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63",
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "axe-core": "^4.13.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vitest": "^4.1.11"
+  }
+}

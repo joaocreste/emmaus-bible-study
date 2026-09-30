@@ -1,0 +1,25 @@
+.note {
+  margin-bottom: var(--space-8);
+}
+
+.canonLine {
+  margin: calc(-1 * var(--space-2)) 0 var(--space-5);
+}
+
+.outline {
+  margin-bottom: var(--space-8);
+}
+
+.readings {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+  align-items: start;
+  gap: var(--space-4);
+  list-style: none;
+}

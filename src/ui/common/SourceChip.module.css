@@ -1,0 +1,107 @@
+/* One line: the source name stays readable, a long locator truncates first (all the
+   shrinking happens there), and the chip never grows wider than the card it sits in. */
+.chip {
+  composes: touch-target from global;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 26px;
+  padding: 2px var(--space-2) 2px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  color: var(--color-ink-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  line-height: 1.3;
+  text-align: left;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.chip:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-ink);
+}
+
+.chip[data-missing='true'] {
+  border-style: dashed;
+  color: var(--color-danger);
+}
+
+.label {
+  /* never shrinks by a fraction of a pixel (which would ellipsize a whole word); only capped
+     so the locator's first characters and the icon keep a little room */
+  flex: none;
+  max-width: calc(100% - 30px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.locator {
+  flex: 0 1000 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-ink-3);
+}
+
+.icon {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  opacity: 0.7;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.listLabel {
+  font-family: var(--font-sans);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+.listLabel:empty {
+  display: none;
+}
+
+.provenanceLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
+  max-width: 100%;
+  margin-top: var(--space-3);
+}
+
+.provenanceLine > * {
+  min-width: 0;
+}
+
+/* Touch: a little taller, with the global 44px touch-target hit area; rows spaced so hit areas do not overlap. */
+@media (pointer: coarse) {
+  .chip {
+    min-height: 32px;
+  }
+
+  .list {
+    row-gap: var(--space-3);
+  }
+}

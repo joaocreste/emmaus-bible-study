@@ -1,0 +1,173 @@
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rowLabel {
+  margin-inline-end: var(--space-1);
+  font-family: var(--font-sans);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+.count {
+  margin-inline-start: 2px;
+  font-variant-numeric: lining-nums tabular-nums;
+  opacity: 0.85; /* stays ≥4.5:1 on the chip, pressed or not */
+}
+
+/* "What the relationships mean" — the badge explanations, readable without hovering */
+.legend {
+  max-width: var(--reading-measure);
+}
+
+.legend > button {
+  display: inline-flex;
+  width: auto;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) 0;
+  color: var(--color-primary-ink);
+}
+
+.legend > button > svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 0;
+  color: currentColor;
+}
+
+.legendSummary {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.legendList {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-1) 0 var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+}
+
+.legendItem {
+  display: grid;
+  grid-template-columns: minmax(9rem, max-content) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.legendItem dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.legendItem dt :global(svg) {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+
+.legendItem dd {
+  margin: 0;
+  color: var(--color-ink-2);
+}
+
+@media (max-width: 479px) {
+  .legendItem {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+
+@media (pointer: coarse) {
+  .chipRow {
+    row-gap: var(--space-3);
+  }
+}
+
+.statusRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-height: 28px;
+  margin-bottom: var(--space-5);
+}
+
+.status {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--color-ink-3);
+}
+
+.removable {
+  composes: touch-target from global;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 2px 8px 2px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 60%, var(--color-border));
+  border-radius: var(--radius-pill);
+  background: var(--color-gold-soft);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--color-gold-ink);
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.removable strong {
+  font-weight: 700;
+}
+
+.removable:hover {
+  border-color: var(--color-gold);
+}
+
+.removable :global(svg) {
+  width: 12px;
+  height: 12px;
+}
+
+.list {
+  container: xrefs / inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  list-style: none;
+}
+
+.empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--color-ink-2);
+}
+
+.emptyNote {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  color: var(--color-ink-3);
+}
