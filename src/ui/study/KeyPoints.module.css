@@ -1,0 +1,55 @@
+.keyPoints {
+  max-width: var(--reading-measure);
+  margin-bottom: var(--space-8);
+}
+
+.heading {
+  margin-bottom: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-rule);
+}
+
+.item {
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.label {
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: var(--leading-snug);
+  color: var(--color-ink);
+}
+
+.answer {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding-inline-start: var(--space-4);
+  border-inline-start: 2px solid var(--kind-synthesis);
+}
+
+/* Composed live, not reviewed by an editor: the synthesis rule is dashed (as in the header summary). */
+.answer[data-verification='generated'] {
+  border-inline-start: 0;
+  background: repeating-linear-gradient(to bottom, var(--kind-synthesis) 0 5px, transparent 5px 9px) left / 2px 100% no-repeat;
+}
+
+.answerText {
+  font-family: var(--font-sans);
+  font-size: var(--text-reading);
+  line-height: var(--leading-normal);
+  color: var(--color-ink-2);
+}

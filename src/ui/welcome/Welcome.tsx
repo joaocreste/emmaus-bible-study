@@ -11,6 +11,7 @@ import { useSessionInternals } from '../../state/session';
 import { useThinkingStep } from '../chat/thinkingSteps';
 import { useInferenceStatus } from '../hooks/useInferenceStatus';
 import { Chip, CrossDivider, CrossLoader, CrossMark } from '../primitives';
+import { useStepText } from '../shell/useStepText';
 import { FeaturedStudies } from './FeaturedStudies';
 import styles from './Welcome.module.css';
 import { WELCOME_INPUT_ID, WELCOME_TITLE_ID } from './welcomeFocus';
@@ -87,7 +88,9 @@ export function Welcome() {
   const epigraphVersion = safeVersionName(epigraph.version);
   const [draft, setDraft] = useState('');
   const thinking = status === 'thinking';
-  const liveStep = liveSteps[liveSteps.length - 1]?.detail;
+  const stepText = useStepText();
+  const liveLines = stepText.lines(liveSteps);
+  const liveStep = liveLines[liveLines.length - 1];
   const cannedStep = useThinkingStep(thinking && !liveStep, pendingText);
   const step = liveStep ?? cannedStep;
   const inference = useInferenceStatus();

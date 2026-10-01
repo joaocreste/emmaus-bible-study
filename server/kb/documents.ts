@@ -9,8 +9,9 @@
  */
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { BOOKS } from '../../src/domain/books';
+import { BOOKS, getBook } from '../../src/domain/books';
 import { formatRef, refKey, wholeBook } from '../../src/domain/reference';
+import type { BookId } from '../../src/domain/models';
 import type { EvidenceKind } from '../../src/inference/protocol';
 import type { CommentaryBookFile, IntroFile, LexiconShardFile } from '../../src/providers/local/formats';
 import { describeLexiconMorph } from '../../src/providers/local/morphology';
@@ -248,6 +249,20 @@ function digest(summary: string): string {
     } else lines.push(paras[i]);
   }
   return lines.join('\n');
+}
+
+/**
+ * The title read_document opens a book's introduction by, its parts being the sections
+ * bookIntroduction returns. The book's own name: Tyndale titles 1–3 John and the Gospel all “John”.
+ */
+export function introTitle(book: BookId): string {
+  return `Tyndale introduction to ${getBook(book).name}`;
+}
+
+/** “Tyndale introduction to Romans — Setting” → “Setting”. */
+export function introSectionHeading(title: string): string {
+  const at = title.indexOf(' — ');
+  return at >= 0 ? title.slice(at + 3) : title;
 }
 
 export async function tyndaleIntroDocuments(dataRoot: string, sources: SourceRegistry): Promise<KbIndexDoc[]> {

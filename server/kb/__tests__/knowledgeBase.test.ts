@@ -11,6 +11,7 @@ import { formatRef, parseReference, refsOverlap } from '../../../src/domain/refe
 import type { PassageRef } from '../../../src/domain/models';
 import type { EvidenceDraft } from '../../../src/inference/protocol';
 import { corpusFingerprint, createKnowledgeBase, evidenceFullText, getKnowledgeBase, resetKnowledgeBase, searchQuery, type EmmausKnowledgeBase } from '../index';
+import { ITEM_CHARS } from '../evidence';
 import { familiesOf, requiredFamilies } from '../traditions';
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -117,7 +118,8 @@ describe('search', () => {
 
   it('excerpts long documents around the query and keeps the full text available', async () => {
     const [hit] = await kb.search('infant baptism children household', { kinds: ['dictionary'], limit: 1 });
-    expect(hit.text.length).toBeLessThanOrEqual(1700);
+    expect(hit.text.length).toBeLessThanOrEqual(800); // ~700 characters and the “[…]” marks
+    expect(evidenceFullText(hit).length).toBeGreaterThan(hit.text.length);
     const full = evidenceFullText(hit);
     expect(full.length).toBeGreaterThanOrEqual(hit.text.length);
     // every excerpted sentence is a verbatim span of the full text
@@ -503,6 +505,29 @@ describe('texts held in parts (read_document)', () => {
     expect(byQuery.drafts.length).toBeGreaterThan(0);
     expect(byQuery.drafts.some((d) => /Pauline Privilege/i.test(d.text))).toBe(true);
     expect(byQuery.drafts.every((d) => d.tradition === 'Catholic')).toBe(true);
+  });
+
+  it('excerpts an opened part or introduction section around the query within the ledger’s per-item cut', async () => {
+    const byQuery = await kb.documentParts!('Divorce (in Moral Theology), 1909', { query: 'Pauline Privilege' });
+    if (!byQuery.found) throw new Error('not found');
+    const drafts = [...byQuery.drafts, ...(await kb.bookIntroduction('ROM'))];
+    expect(drafts.some((d) => evidenceFullText(d).length > d.text.length)).toBe(true);
+    for (const d of drafts) expect(d.text.trim().length).toBeLessThanOrEqual(ITEM_CHARS);
+    expect(byQuery.drafts.some((d) => /Pauline Privilege/i.test(d.text))).toBe(true);
+  });
+
+  it('opens the sections of a book’s introduction by the book’s name, listed by their headings', async () => {
+    const sections = await kb.bookIntroduction('ROM');
+    const intro = await kb.documentParts!('Tyndale introduction to Romans', { parts: [3] });
+    if (!intro.found) throw new Error('not found');
+    expect(intro.total).toBe(sections.length);
+    expect(intro.contents.slice(0, 3)).toEqual(['part 1: At a glance', 'part 2: Overview', 'part 3: Setting']);
+    expect(intro.drafts).toEqual([sections[2]]);
+    // Tyndale titles 1 John’s introduction “John”: it is opened by the book’s own name
+    const first = await kb.documentParts!('Tyndale introduction to 1 John', { parts: [2] });
+    if (!first.found) throw new Error('not found');
+    expect(first.drafts[0].text).toBe((await kb.bookIntroduction('1JN'))[1].text);
+    expect(first.drafts[0].text).not.toBe((await kb.bookIntroduction('JHN'))[1].text);
   });
 
   it('an unknown or ambiguous title opens nothing (and lists candidates when there are some)', async () => {

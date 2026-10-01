@@ -5,7 +5,7 @@
  */
 import type { ChatMessage, DashboardFocus, PassageRef, PipelineStep, SectionId, Study } from '../domain/models';
 import { refContains, refKey } from '../domain/reference';
-import type { EngineResult } from '../engine/types';
+import type { EngineResult, LivePhase } from '../engine/types';
 import { sanitizeSettings } from './settings';
 import type { InspectorTarget, MobilePane, ReaderSettings, SessionState } from './types';
 
@@ -38,6 +38,8 @@ export interface InternalSessionState extends SessionState {
   liveSteps: PipelineStep[];
   /** id of the study whose sections are still arriving (a generated page being composed), if any */
   composingStudyId: string | null;
+  /** what the inference layer is doing for the request in flight (a new page, or a follow-up answer), if anything */
+  livePhase: LivePhase | null;
 }
 
 /** Live steps kept per request (the thinking indicator shows the last few). */
@@ -48,6 +50,8 @@ export type SessionAction =
   | { type: 'request/start'; message?: ChatMessage; text?: string }
   | { type: 'request/success'; result: EngineResult; isPhone: boolean }
   | { type: 'request/failure'; message: ChatMessage; retryText?: string }
+  /** the inference layer took the request in flight: composing a new page, or researching a follow-up */
+  | { type: 'stream/phase'; phase: LivePhase }
   /** a live pipeline step of the request in flight */
   | { type: 'stream/progress'; step: PipelineStep }
   /** a snapshot of the study being composed; `complete: false` while sections are still arriving */
@@ -91,6 +95,7 @@ export function createInitialState(settings: ReaderSettings): InternalSessionSta
     studyAnchor: null,
     liveSteps: [],
     composingStudyId: null,
+    livePhase: null,
   };
 }
 
@@ -105,8 +110,12 @@ export function sessionReducer(state: InternalSessionState, action: SessionActio
         pendingText: action.text ?? message?.text ?? null,
         pendingMessageId: message?.id ?? null,
         liveSteps: [],
+        livePhase: null,
       };
     }
+
+    case 'stream/phase':
+      return state.status === 'thinking' ? { ...state, livePhase: action.phase } : state;
 
     case 'stream/progress': {
       if (state.status !== 'thinking') return state;
@@ -185,6 +194,7 @@ export function sessionReducer(state: InternalSessionState, action: SessionActio
         studyAnchor: nextAnchor(state.studyAnchor, result, study, studyChanged),
         liveSteps: [],
         composingStudyId: null,
+        livePhase: null,
       };
     }
 
@@ -197,6 +207,7 @@ export function sessionReducer(state: InternalSessionState, action: SessionActio
         pendingMessageId: null,
         liveSteps: [],
         composingStudyId: null,
+        livePhase: null,
         retryByMessage: action.retryText
           ? { ...state.retryByMessage, [action.message.id]: action.retryText }
           : state.retryByMessage,

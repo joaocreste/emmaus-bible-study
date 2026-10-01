@@ -810,7 +810,27 @@ export interface PipelineStep {
   detail: string;
   /** provider id that served it, e.g. "local:bsb", "curated:romans-8" */
   provider?: string;
+  /**
+   * What a live step means for the reader's study, for the progress shown while a page is composed
+   * (the reader sees study terms in their language — never model names, budgets or checks). Steps
+   * without it are not shown there; `detail` stays for the trace and the logs.
+   */
+  reader?: ReaderStep;
 }
+
+export type ReaderStep =
+  | { kind: 'planning' }
+  | { kind: 'topics' }
+  | { kind: 'search' }
+  | { kind: 'sources' }
+  | { kind: 'scripture'; refs: PassageRef[] }
+  | { kind: 'original'; refs: PassageRef[] }
+  | { kind: 'commentary'; refs: PassageRef[] }
+  | { kind: 'cross-references'; refs: PassageRef[] }
+  | { kind: 'introduction'; book: string }
+  | { kind: 'words' }
+  | { kind: 'writing'; title?: string }
+  | { kind: 'section'; section: SectionId };
 
 export interface ChatMessage {
   id: string;

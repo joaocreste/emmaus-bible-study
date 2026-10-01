@@ -28,11 +28,9 @@ export function useInferenceStatus(client: InferenceClient = inferenceClient): I
   return status;
 }
 
-/** "Claude · claude-opus-5 · 24,512 knowledge-base documents" (in the reader's language). */
+/** "Ready · 24,512 knowledge-base documents" (in the reader’s language). */
 export function describeAvailable(status: InferenceStatus, locale: Locale = 'en'): string {
-  const parts = ['Claude'];
-  if (status.model) parts.push(status.model);
+  // the reader's terms: what is ready and how much it draws on — not the model behind it
   const n = status.knowledgeBase.documents;
-  if (n > 0) parts.push(translate(locale, 'shell', 'live.documents', { count: n }));
-  return parts.join(' · ');
+  return n > 0 ? translate(locale, 'shell', 'live.ready', { documents: translate(locale, 'shell', 'live.documents', { count: n }) }) : translate(locale, 'shell', 'live.readyShort');
 }

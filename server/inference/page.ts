@@ -13,6 +13,15 @@ import type { BeginResult, FinishResult, PageInfo, SectionPayload } from './vali
 
 type SectionMeta = { title?: string; intro?: string };
 
+/** A saved page (PageBuilder.save). */
+export interface PageState {
+  readonly study: Study;
+  readonly order: readonly PageSection[];
+  readonly meta: ReadonlyMap<PageSection, SectionMeta>;
+  readonly begun: boolean;
+  readonly finished: boolean;
+}
+
 const SECTION_NOUN: Record<PageSection, [string, string]> = {
   'key-passages': ['passage', 'passages'],
   'cross-references': ['cross-reference', 'cross-references'],
@@ -126,49 +135,64 @@ export class PageBuilder {
 
   /**
    * Put a validated section on the page. `replace` swaps the section's content (for
-   * theology: each of themes / perspectives that the call carries); `append` adds to it.
+   * theology: each of themes / perspectives that the call carries); `append` adds to it,
+   * skipping items already there. Returns the ids of the items it put on the page.
    */
-  apply(payload: SectionPayload, meta: SectionMeta, mode: 'replace' | 'append'): void {
+  apply(payload: SectionPayload, meta: SectionMeta, mode: 'replace' | 'append'): string[] {
     const s = this.study;
     const replace = mode === 'replace';
+    const placed: string[] = [];
+    const all = <T extends { id: string }>(items: T[]): T[] => {
+      placed.push(...items.map((x) => x.id));
+      return items;
+    };
+    const mergeBy = <T extends { id: string }>(existing: readonly T[], incoming: readonly T[], key: (x: T) => string): T[] => {
+      const seen = new Set(existing.map(key));
+      const fresh = incoming.filter((x) => !seen.has(key(x)));
+      placed.push(...fresh.map((x) => x.id));
+      return [...existing, ...fresh];
+    };
     switch (payload.section) {
       case 'key-passages': {
         const topic = s.topic ?? { name: s.title, definition: s.summary ?? emptyText(), keyPassages: [] };
-        topic.keyPassages = replace ? payload.items : mergeBy(topic.keyPassages, payload.items, (x) => refId(x.ref));
+        topic.keyPassages = replace ? all(payload.items) : mergeBy(topic.keyPassages, payload.items, (x) => refId(x.ref));
         s.topic = topic;
         break;
       }
       case 'cross-references':
-        s.crossReferences = replace ? payload.items : mergeBy(s.crossReferences, payload.items, (x) => `${refId(x.from)}>${refId(x.target)}`);
+        s.crossReferences = replace ? all(payload.items) : mergeBy(s.crossReferences, payload.items, (x) => `${refId(x.from)}>${refId(x.target)}`);
         break;
       case 'original-languages':
-        s.keyWords = replace ? payload.items : mergeBy(s.keyWords, payload.items, (x) => x.strong);
+        s.keyWords = replace ? all(payload.items) : mergeBy(s.keyWords, payload.items, (x) => x.strong);
         break;
       case 'historical-context':
-        s.context = replace ? payload.items : mergeBy(s.context, payload.items, (x) => titleKey(x.title));
+        s.context = replace ? all(payload.items) : mergeBy(s.context, payload.items, (x) => titleKey(x.title));
         break;
       case 'literary-context':
         s.literary =
-          replace || !s.literary ? payload.literary : { ...s.literary, features: mergeBy(s.literary.features, payload.literary.features, (x) => titleKey(x.title)) };
+          replace || !s.literary
+            ? { ...payload.literary, features: all(payload.literary.features) }
+            : { ...s.literary, features: mergeBy(s.literary.features, payload.literary.features, (x) => titleKey(x.title)) };
         break;
       case 'theology':
         if (replace) {
           // themes and perspectives are two lists: a call replaces only the list(s) it brought
           // accepted items for, so sending themes and perspectives in separate calls keeps both
-          if (payload.themes.length) s.theology = payload.themes;
-          if (payload.perspectives.length) s.perspectives = payload.perspectives;
+          if (payload.themes.length) s.theology = all(payload.themes);
+          if (payload.perspectives.length) s.perspectives = all(payload.perspectives);
         } else {
           s.theology = mergeBy(s.theology, payload.themes, (x) => titleKey(x.title));
           s.perspectives = mergeBy(s.perspectives, payload.perspectives, (x) => titleKey(x.question));
         }
         break;
       case 'commentary':
-        s.commentary = replace ? payload.items : mergeBy(s.commentary, payload.items, (x) => `${x.sourceId}|${x.locator ?? ''}|${x.text}`);
+        s.commentary = replace ? all(payload.items) : mergeBy(s.commentary, payload.items, (x) => `${x.sourceId}|${x.locator ?? ''}|${x.text}`);
         break;
     }
     if (!this.order.includes(payload.section)) this.order.push(payload.section);
     const prev = this.meta.get(payload.section) ?? {};
     this.meta.set(payload.section, { title: meta.title || prev.title, intro: meta.intro || prev.intro });
+    return placed;
   }
 
   finish(result: FinishResult, linkEvidence: Map<string, string[]>): void {
@@ -183,6 +207,20 @@ export class PageBuilder {
   finishWithoutOpening(): void {
     const s = this.study;
     if (!s.opening && s.summary) s.opening = s.summary;
+  }
+
+  /** The page as it stands, for restore(): what a model turn that is then declined wrote is taken back. Item ids are not reused. */
+  save(): PageState {
+    return { study: structuredClone(this.study), order: [...this.order], meta: new Map(this.meta), begun: this.begun, finished: this.finished };
+  }
+
+  restore(state: PageState): void {
+    this.study = structuredClone(state.study);
+    this.order.splice(0, this.order.length, ...state.order);
+    this.meta.clear();
+    for (const [section, meta] of state.meta) this.meta.set(section, meta);
+    this.begun = state.begun;
+    this.finished = state.finished;
   }
 
   /** Items (by id) a concept should highlight: same words, or shared evidence within its section. */
@@ -338,11 +376,6 @@ function refId(r: PassageRef): string {
 
 function titleKey(title: string): string {
   return normalizePhrase(title);
-}
-
-function mergeBy<T>(existing: readonly T[], incoming: readonly T[], key: (x: T) => string): T[] {
-  const seen = new Set(existing.map(key));
-  return [...existing, ...incoming.filter((x) => !seen.has(key(x)))];
 }
 
 function emptyText(): ProvenancedText {

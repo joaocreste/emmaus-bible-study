@@ -14,9 +14,9 @@
  *               introductions, lexicon senses and curated items — see ./searchIndex.ts;
  *               cached in .kb-cache/index-<hash>.json
  *
- * Text policy (see ./evidence.ts): long items are excerpted (≤ ~1,600 characters around
- * the query’s terms, cuts marked “[…]”); `evidenceFullText(draft)` returns the complete
- * retrieved text of any excerpted item.
+ * Text policy (see ./evidence.ts): long items are excerpted (search hits ≤ ~700 characters,
+ * commentary ≤ ~900, around the query’s terms, cuts marked “[…]”); `evidenceFullText(draft)`
+ * returns the complete retrieved text of any excerpted item.
  */
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -33,8 +33,10 @@ import type { LocalLexiconEntry, LocalOccurrences, LocalOriginalVerse, LocalPass
 import type { ProviderRegistry } from '../../src/providers/types';
 import { commentaryAuthorId } from './authors';
 import { CURATED_SOURCE, curatedDocuments, topicEvidenceText } from './curated';
-import { corpusDocuments, lexiconDocuments, parseCorpus, readCorpusFiles, tyndaleIntroDocuments, tyndaleNoteDocuments, type KbIndexDoc } from './documents';
+import { corpusDocuments, introSectionHeading, introTitle, lexiconDocuments, parseCorpus, readCorpusFiles, tyndaleIntroDocuments, tyndaleNoteDocuments, type KbIndexDoc } from './documents';
 import {
+  COMMENTARY_EXCERPT_CHARS,
+  PART_EXCERPT_CHARS,
   commentaryEvidence,
   crossReferenceEvidence,
   docEvidence,
@@ -804,7 +806,7 @@ class KnowledgeBaseImpl implements EmmausKnowledgeBase {
     if (!tryGetBook(book)) return [];
     await this.ready();
     const { docs } = this.index;
-    return (this.introsByBook.get(book) ?? []).map((i) => docEvidence(docs[i], this.providers.sources, new Set(), 2600));
+    return (this.introsByBook.get(book) ?? []).map((i) => docEvidence(docs[i], this.providers.sources, new Set(), PART_EXCERPT_CHARS));
   }
 
   /* ---------------------------------------------------------------- */
@@ -829,6 +831,11 @@ class KnowledgeBaseImpl implements EmmausKnowledgeBase {
       g.parts.push({ part: Number(m[1]), id: i });
     });
     for (const g of groups.values()) g.parts.sort((a, b) => a.part - b.part);
+    // a book's introduction, its sections numbered as bookIntroduction returns them (book_introduction shows a few and lists the rest)
+    for (const [book, ids] of this.introsByBook) {
+      const title = introTitle(book);
+      groups.set(normTitle(title), { title, heading: `${getBook(book).name} introduction`, parts: ids.map((id, n) => ({ part: n + 1, id })), sections: true });
+    }
     this.partGroupsCache = groups;
     return groups;
   }
@@ -874,8 +881,8 @@ class KnowledgeBaseImpl implements EmmausKnowledgeBase {
       const hits = index.search(searchQuery(opts.query), { filter: (r) => inGroup.has(r.id as number) });
       ids = hits.slice(0, 3).map((h) => h.id as number);
     }
-    const contents = g.parts.map((p) => `part ${p.part}: ${openingWords(docs[p.id].text, 14)}`);
-    const drafts = ids.map((i) => docEvidence(docs[i], sources, terms, 2600));
+    const contents = g.parts.map((p) => `part ${p.part}: ${g.sections ? introSectionHeading(docs[p.id].title) : openingWords(docs[p.id].text, 14)}`);
+    const drafts = ids.map((i) => docEvidence(docs[i], sources, terms, PART_EXCERPT_CHARS));
     return { found: true, title: g.title, total: g.parts.length, drafts, contents, unknownParts };
   }
 }
@@ -886,6 +893,8 @@ interface PartGroup {
   /** the bare heading, e.g. "Divorce (in Moral Theology), 1909" */
   heading: string;
   parts: { part: number; id: number }[];
+  /** a book's introduction: its parts are its sections, listed by their headings */
+  sections?: boolean;
 }
 
 /** “… (part 4)” at the end of a title (a tradition tag may follow: “… (part 4) [Methodist]”). */
@@ -1042,7 +1051,7 @@ function pickSections<S extends { ref: PassageRef }>(sections: S[], ref: Passage
  * “3. …”, Henry and JFB cite “Rom 8:3”), so the excerpt is about the verse asked for.
  */
 function focusOnVerse(text: string, section: PassageRef, ref: PassageRef): string {
-  if (text.length <= 1600 || ref.startVerse == null) return text;
+  if (text.length <= COMMENTARY_EXCERPT_CHARS || ref.startVerse == null) return text;
   if (section.startChapter === ref.startChapter && (section.startVerse ?? 1) >= ref.startVerse) return digestRange(text, section, ref) ?? text;
   const v = ref.startVerse;
   const c = ref.startChapter;
@@ -1073,7 +1082,7 @@ export function datedWork(title: string, year: string | undefined): string {
  * crux verse is not cut off by the length limit. Null when the section has no such
  * paragraphs (the caller then shows it from the start).
  */
-export function digestRange(text: string, section: PassageRef, ref: PassageRef, budget = 1560): string | null {
+export function digestRange(text: string, section: PassageRef, ref: PassageRef, budget = COMMENTARY_EXCERPT_CHARS - 40): string | null {
   const endVerse = ref.endVerse ?? ref.startVerse;
   if (ref.startVerse == null || endVerse == null || endVerse <= ref.startVerse || (ref.endChapter ?? ref.startChapter) !== ref.startChapter) return null;
   const first = section.startChapter === ref.startChapter ? (section.startVerse ?? 1) : 1;
@@ -1086,8 +1095,8 @@ export function digestRange(text: string, section: PassageRef, ref: PassageRef, 
     last = v;
   }
   if (!marks.length) return null;
-  // at most 7 paragraphs besides the opening (about 190 characters each at worst), spread over the range, the last one kept
-  const keep = Math.min(marks.length, 7);
+  // paragraphs besides the opening, about 190 characters each at worst (7 in 1,560 characters), spread over the range, the last one kept
+  const keep = Math.min(marks.length, Math.max(2, Math.floor(budget / 190) - 1));
   const picked = keep === marks.length ? marks : Array.from({ length: keep }, (_, i) => marks[Math.round((i * (marks.length - 1)) / (keep - 1))]);
   const starts = [0, ...new Set(picked)];
   const share = Math.floor(budget / starts.length) - 8;

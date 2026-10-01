@@ -7,8 +7,10 @@
  *                        → tool results (what was accepted / rejected and why) → next turn
  *
  * and streams InferenceEvents as it goes: `progress` per tool call, a `study` snapshot
- * after begin_page and after every accepted add_section (complete:false), the final
- * snapshot (complete:true), the chat `reply`, then `done` (always last, after `error` too).
+ * after begin_page and after every accepted add_section (complete:false; composition calls
+ * run as soon as their block has streamed, so these arrive while the turn is still being
+ * written), the final snapshot (complete:true), the chat `reply`, then `done` (always last,
+ * after `error` too).
  */
 import type {
   ChatMessage,
@@ -39,14 +41,14 @@ import type { InferenceConfig } from './config';
 import { classifyError, ERROR_MESSAGES, InferenceError } from './errors';
 import { EvidenceLedger } from './ledger';
 import type { DecisionLog, RunLog, RunLogWriter, ToolCallLog } from './logs';
-import { runToolLoop, type LoopEnd, type ToolExecution, type TurnRecord } from './loop';
+import { runToolLoop, type EarlyCall, type LoopEnd, type ToolExecution, type TurnRecord } from './loop';
 import type { BetaMessageParam, BetaTextBlockParam, BetaTool, BetaToolUseBlock, ModelClient } from './modelClient';
 import { DEFAULT_SECTION_TITLE, PageBuilder } from './page';
 import { answerUserMessage, ANSWER_SYSTEM_PROMPT, COMPOSE_SYSTEM_PROMPT, composeNowMessage, composeUserMessage, CORE_SYSTEM_PROMPT, knowledgeBaseNote } from './prompt';
 import { RefChecker } from './refs';
 import { isResearchTool, prepareResearchCall, RESEARCH_TOOLS, type PreparedCall } from './research';
 import { shortHash } from './text';
-import { authorOf, Validator, type Decision, type SectionPayload } from './validate';
+import { authorOf, Validator, type Decision } from './validate';
 
 /* ------------------------------------------------------------------ */
 /* Stable request prefix (tools → system): identical for every request */
@@ -118,6 +120,12 @@ class Run {
   /** sections (and item ids) added by this run */
   readonly added = new Map<PageSection, string[]>();
   researchCalls = 0;
+  /** logs of composition calls that ran while their turn streamed, by tool_use id */
+  private readonly earlyLogs = new Map<string, ToolCallLog>();
+  /** composition calls (by tool_use id) that were rejected, wholly or in part */
+  private readonly rejectedCalls = new Set<string>();
+  /** takes the run back to where it was before the current turn's first early call (discardEarly) */
+  private undoEarly: (() => void) | null = null;
   /** the API error that interrupted a composition whose checked sections were kept */
   interruption: InferenceError | null = null;
   private budgetSent = false;
@@ -158,9 +166,14 @@ class Run {
     this.startedAt = this.now();
   }
 
+  /** turns a model completed (failed attempts are recorded for their usage only) */
+  get servedTurns(): TurnRecord[] {
+    return this.turns.filter((t) => !t.failed);
+  }
+
   /** a fallback model served at least one turn */
   get usedFallback(): boolean {
-    return this.turns.some((t) => t.fallback);
+    return this.servedTurns.some((t) => t.fallback);
   }
 
   now(): number {
@@ -175,10 +188,6 @@ class Run {
     return this.flow === 'compose' ? this.config.maxResearchCalls : this.config.maxAnswerResearchCalls;
   }
 
-  get turn(): number {
-    return this.turns.length;
-  }
-
   get rejectedItems(): number {
     let n = 0;
     for (const v of this.rejectedBy.values()) n += v;
@@ -187,7 +196,8 @@ class Run {
 
   /** the model that answered the latest turn (differs from the configured one after a server-side fallback) */
   get modelUsed(): string {
-    return this.turns[this.turns.length - 1]?.model || this.config.model;
+    const served = this.servedTurns;
+    return served[served.length - 1]?.model || this.config.model;
   }
 
   progress(step: PipelineStep): void {
@@ -223,6 +233,7 @@ class Run {
       stage: 'Budget',
       detail: reason === 'calls' ? `Research budget reached (${this.researchCalls} lookups) — composing from what was found` : 'Research time limit reached — composing from what was found',
       provider: PROVIDER_COMPOSE,
+      ...(this.flow === 'compose' ? { reader: { kind: 'writing' } as const } : {}),
     });
     return composeNowMessage(reason, this.researchCalls, max, this.flow);
   }
@@ -233,29 +244,105 @@ class Run {
       return 'You ended your turn without answering. Call the reply tool now with your answer and its evidence ids (or declined: true, saying plainly what the knowledge base lacks).';
     }
     if (!this.builder.hasBegun) {
-      return 'You ended your turn without starting the page. Call begin_page now, then add_section for each section the evidence supports, then finish_page. Write nothing outside the tools.';
+      return 'You ended your turn without starting the page. Call begin_page now with add_section for each section the evidence supports, all in one turn; finish_page comes in the turn after. Write nothing outside the tools.';
     }
-    return 'The page is not finished. Add any remaining sections the evidence supports with add_section, then call finish_page. Write nothing outside the tools.';
+    return 'The page is not finished. Call finish_page now, after add_section for any remaining section the evidence supports, all in one turn. Write nothing outside the tools.';
   }
 
   onTurn(record: TurnRecord): void {
     this.turns.push(record);
-    if (record.fallback) {
+    if (record.fallback && !record.failed) {
       this.progress({ stage: 'Model', detail: `The request was served by the fallback model (${record.model})`, provider: `anthropic:${record.model}` });
     }
   }
 
-  async executeTools(blocks: BetaToolUseBlock[]): Promise<ToolExecution[]> {
-    const turn = this.turn;
+  /** loop hook: composition calls run as soon as their block has streamed (the reader sees each section appear) */
+  runsEarly(name: string): boolean {
+    return isComposeTool(name);
+  }
+
+  /** A composition call run while its turn streams. Logged now (it changed the page even if the turn then fails); its result goes back with the turn's other results. */
+  async executeEarly(b: BetaToolUseBlock, turn: number, before: readonly EarlyCall[]): Promise<ToolExecution> {
+    // the turn's first early call: what a declined response must be able to take back
+    if (!before.length) this.undoEarly = this.saveState();
+    const started = this.now();
+    const exec = await this.composeCall(b, turn, this.sectionRejectedIn(before.map((c) => c.block)));
+    const log: ToolCallLog = { turn, id: b.id, name: b.name, input: b.input, isError: exec.isError, evidence: [], result: exec.content.slice(0, 1200), ms: this.now() - started };
+    this.toolCalls.push(log);
+    this.earlyLogs.set(b.id, log);
+    return exec;
+  }
+
+  /**
+   * The response these early calls came from was declined (a refusal, or a fallback model took over
+   * partway): nothing it wrote may stay on the page. The run goes back to where it was before them
+   * and the reader is sent the page as it was (the log keeps the calls, marked withdrawn).
+   */
+  discardEarly(calls: readonly EarlyCall[]): void {
+    const undo = this.undoEarly;
+    this.undoEarly = null;
+    if (!undo || !calls.length) return;
+    undo();
+    for (const { block } of calls) {
+      const log = this.earlyLogs.get(block.id);
+      if (log) log.result = `[withdrawn: the response was declined] ${log.result}`;
+    }
+    // an accepted begin_page or add_section sent the reader a snapshot: send the page as it is again
+    if (!calls.some(({ block, result }) => !result.isError && (block.name === 'begin_page' || block.name === 'add_section'))) return;
+    this.progress({ stage: 'Check', detail: 'The model declined partway through its response — what that response had added to the page was withdrawn', provider: PROVIDER_VALIDATOR });
+    this.emit({ type: 'study', study: this.snapshot(), complete: this.flow === 'answer' });
+  }
+
+  /** The run's page state (page, accepted items, outcome flags), restored by the function returned. */
+  private saveState(): () => void {
+    const page = this.builder.save();
+    const itemEvidence = new Map(this.validator.itemEvidence);
+    const added = new Map(this.added);
+    const rejectedBy = new Map(this.rejectedBy);
+    const { finished, replyResult } = this;
+    return () => {
+      this.builder.restore(page);
+      refill(this.validator.itemEvidence, itemEvidence);
+      refill(this.added, added);
+      refill(this.rejectedBy, rejectedBy);
+      this.finished = finished;
+      this.replyResult = replyResult;
+    };
+  }
+
+  /** Was an add_section among these calls (earlier in the same turn) rejected, wholly or in part? A finish_page or reply after it was written before the model saw what the page lost. */
+  private sectionRejectedIn(blocks: readonly BetaToolUseBlock[]): boolean {
+    return blocks.some((b) => b.name === 'add_section' && this.rejectedCalls.has(b.id));
+  }
+
+  /** A turn failed after some of its calls ran and is sent again: what the server already did with them, and the page as it stands. */
+  retryNote(calls: readonly EarlyCall[]): string | null {
+    if (!calls.length) return null;
+    const lines = calls.map(({ block, result }) => `${block.name}${sectionOf(block.input)}: ${result.content}`);
+    const next =
+      this.flow !== 'compose'
+        ? 'What they added stays on the page (items sent again are skipped). Continue with the calls that did not arrive.'
+        : `${this.builder.hasBegun ? `Page so far: ${this.builder.sections.map((s) => this.builder.describe(s)).join('; ') || 'no sections'}.` : 'Nothing is on the page yet.'} ` +
+          'Do not send those calls again unless you are correcting one (a section sent again replaces its earlier version); continue with the calls that did not arrive.';
+    return ['Your previous response was cut off before it ended. The server had already checked the calls it completed:', ...lines, next].join('\n\n');
+  }
+
+  async executeTools(blocks: BetaToolUseBlock[], turn: number, early: ReadonlyMap<string, ToolExecution>): Promise<ToolExecution[]> {
     const results: ToolExecution[] = new Array(blocks.length);
     const logs: ToolCallLog[] = new Array(blocks.length);
+    // calls that ran while the turn streamed (logged then): their results only
+    blocks.forEach((b, i) => {
+      const exec = early.get(b.id);
+      if (exec) results[i] = exec;
+    });
     const done = (i: number, started: number, exec: ToolExecution, evidence: string[] = []): ToolExecution => {
       const b = blocks[i];
       logs[i] = { turn, id: b.id, name: b.name, input: b.input, isError: exec.isError, evidence, result: exec.content.slice(0, 1200), ms: this.now() - started };
       return exec;
     };
     const research = blocks.filter((b) => isResearchTool(b.name)).length;
-    const budgetChars = Math.max(8000, Math.min(28000, Math.floor(84000 / Math.max(1, research))));
+    // result text shared by the turn's research calls; an item that does not fit is listed without its text (read_document opens it)
+    const budgetChars = Math.max(6000, Math.min(16000, Math.floor(50000 / Math.max(1, research))));
 
     // Phase 1 — validate research calls and start their lookups concurrently (progress as they start).
     const pending = new Map<number, { call: PreparedCall; drafts: Promise<Awaited<ReturnType<PreparedCall['fetch']>>>; started: number }>();
@@ -272,7 +359,7 @@ class Run {
       }
       const prepared = await prepareResearchCall(b.name, b.input, { kb: this.deps.kb, ledger: this.ledger, refs: this.refs, translation: this.translation });
       if (!prepared.ok) {
-        results[i] = done(i, started, { content: `Error: ${prepared.error}\n(Not counted: research calls used so far ${this.researchCalls} of ${this.maxResearchCalls}.)`, isError: true });
+        results[i] = done(i, started, { content: `Error: ${prepared.error}\n(Not counted against the research budget.)`, isError: true });
         continue;
       }
       this.researchCalls++;
@@ -283,6 +370,8 @@ class Run {
     }
 
     // Phase 2 — in block order: add research results to the ledger (deterministic ids), run composition calls.
+    // Evidence first shown by this turn's results cannot be cited by its composition calls, written before the model read it.
+    this.ledger.beginTurn();
     for (let i = 0; i < blocks.length; i++) {
       if (results[i]) continue;
       const b = blocks[i];
@@ -293,7 +382,7 @@ class Run {
           const entries = this.ledger.addAll(drafts);
           const extra = p.call.after?.(drafts) ?? null;
           const body = entries.length ? this.ledger.render(entries, budgetChars) : extra ? '' : p.call.empty;
-          const content = [body, extra ?? '', entries.length && p.call.note ? p.call.note : '', `Research calls used: ${this.researchCalls} of ${this.maxResearchCalls}.`].filter(Boolean).join('\n\n');
+          const content = [body, extra ?? '', entries.length && p.call.note ? p.call.note : ''].filter(Boolean).join('\n\n');
           results[i] = done(i, p.started, { content, isError: false }, entries.map((e) => e.evidence.id));
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
@@ -303,34 +392,76 @@ class Run {
       }
       const started = this.now();
       if (isComposeTool(b.name)) {
-        let exec: ToolExecution;
-        try {
-          exec = await this.compose(b, turn);
-        } catch (err) {
-          const message = err instanceof Error ? err.message : String(err);
-          exec = { content: `The server could not check this call (${message}). Try again.`, isError: true };
-        }
-        results[i] = done(i, started, exec);
+        results[i] = done(i, started, await this.composeCall(b, turn, this.sectionRejectedIn(blocks.slice(0, i))));
         continue;
       }
       results[i] = done(i, started, { content: `Unknown tool “${b.name}”.`, isError: true });
+    }
+    this.ledger.endTurn();
+    const last = blocks.findLastIndex((b) => isComposeTool(b.name));
+    const summary = last >= 0 ? this.turnSummary(blocks) : null;
+    if (summary) {
+      results[last] = { ...results[last], content: `${results[last].content}\n\n${summary}` };
+      const result = results[last].content.slice(0, 1200);
+      // a call that ran while the turn streamed was logged then
+      const earlyLog = this.earlyLogs.get(blocks[last].id);
+      const at = earlyLog ? this.toolCalls.indexOf(earlyLog) : -1;
+      if (at >= 0) this.toolCalls[at] = { ...this.toolCalls[at], result };
+      else logs[last] = { ...logs[last], result };
     }
     this.toolCalls.push(...logs.filter(Boolean));
     return results;
   }
 
+  /**
+   * One composition call, validated and applied the same way whether it runs while the turn streams or
+   * after it. `afterRejection`: an add_section earlier in the same turn was rejected, wholly or in part.
+   */
+  private async composeCall(b: BetaToolUseBlock, turn: number, afterRejection: boolean): Promise<ToolExecution> {
+    const decided = this.decisions.length;
+    let exec: ToolExecution;
+    try {
+      exec = await this.compose(b, turn, afterRejection);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      exec = { content: `The server could not check this call (${message}). Try again.`, isError: true };
+    }
+    for (const d of this.decisions.slice(decided)) d.callId = b.id;
+    if (exec.isError || this.decisions.slice(decided).some((d) => d.rejected.length > 0)) this.rejectedCalls.add(b.id);
+    return exec;
+  }
+
+  /**
+   * Said once per turn, after the turn's last composition call (so each add_section result stays
+   * short): the page so far and the next step — sections and repairs go in one turn, finish_page
+   * with any repairs in the next. Compose flow only; nothing once the page is finished.
+   */
+  private turnSummary(blocks: readonly BetaToolUseBlock[]): string | null {
+    if (this.flow !== 'compose' || this.finished) return null;
+    if (!this.builder.hasBegun) return 'Nothing is on the page yet: send begin_page again, with every add_section after it, in one turn.';
+    if (this.builder.sectionCount === 0) return 'Page so far: no sections. Next, send add_section for every section the evidence supports, in page order, in one turn; finish_page comes in the turn after.';
+    // this turn's calls only (not those of an attempt at it that failed and was sent again)
+    const problems = this.sectionRejectedIn(blocks);
+    return (
+      `Page so far: ${this.builder.sections.map((s) => this.builder.describe(s)).join('; ')}.` +
+      (problems
+        ? ' If a rejected item matters, call add_section again for its section with the complete corrected list; otherwise leave it out. Send any repairs, any missing section and finish_page together in your next turn.'
+        : ' Next, send finish_page (after any missing section) in one turn.')
+    );
+  }
+
   /* ---------------- composition tools ---------------- */
 
-  private async compose(b: BetaToolUseBlock, turn: number): Promise<ToolExecution> {
+  private async compose(b: BetaToolUseBlock, turn: number, afterRejection: boolean): Promise<ToolExecution> {
     switch (b.name) {
       case 'begin_page':
         return this.flow === 'compose' ? this.beginPage(b.input, turn) : error('begin_page is not available for follow-up answers. Research if needed, optionally add_section, then call reply.');
       case 'add_section':
         return this.addSection(b.input, turn);
       case 'finish_page':
-        return this.flow === 'compose' ? this.finishPage(b.input, turn) : error('finish_page is not available for follow-up answers. Call reply with your answer.');
+        return this.flow === 'compose' ? this.finishPage(b.input, turn, afterRejection) : error('finish_page is not available for follow-up answers. Call reply with your answer.');
       case 'reply':
-        return this.flow === 'answer' ? this.reply(b.input, turn) : error('reply is only for follow-up answers. Compose the page with begin_page, add_section and finish_page.');
+        return this.flow === 'answer' ? this.reply(b.input, turn, afterRejection) : error('reply is only for follow-up answers. Compose the page with begin_page, add_section and finish_page.');
       default:
         return error(`Unknown tool “${b.name}”.`);
     }
@@ -365,19 +496,11 @@ class Run {
     }
     this.builder.begin(r.page);
     this.rejectedBy.set('begin', 0);
-    this.progress({ stage: 'Compose', detail: `Started the page “${r.page.title}”`, provider: PROVIDER_COMPOSE });
+    this.progress({ stage: 'Compose', detail: `Started the page “${r.page.title}”`, provider: PROVIDER_COMPOSE, reader: { kind: 'writing', title: r.page.title } });
     this.emit({ type: 'study', study: this.snapshot(), complete: false });
     const where = r.page.passage ? `${r.page.kind === 'passage' ? 'page passage' : 'anchor passage'} ${formatRef(r.page.passage)}` : 'no Scripture section';
-    const left = this.maxResearchCalls - this.researchCalls;
-    // research stays open until the budget is reached: a page begun with most of it unused is a cue to check the gaps first
-    const budgetNote =
-      !again && left >= Math.ceil(this.maxResearchCalls / 3) && !this.budgetSent
-        ? ` You still have ${left} of ${this.maxResearchCalls} research calls: if a tradition you will present has no text of its own on the disputed point yet, or a crux verse or a passage you will feature is unread, research it before the sections that need it.`
-        : '';
-    return {
-      content: report(`Page started: “${r.page.title}” (${r.page.kind} page, ${where}). Now add the sections with add_section in page order, then call finish_page.${budgetNote}`, r),
-      isError: false,
-    };
+    // what comes next is said once per turn, in turnSummary
+    return { content: report(`Page started: “${r.page.title}” (${r.page.kind} page, ${where}).`, r), isError: false };
   }
 
   private async addSection(input: unknown, turn: number): Promise<ToolExecution> {
@@ -407,25 +530,25 @@ class Run {
         provider: PROVIDER_VALIDATOR,
       });
       return {
-        content: report(`add_section ${data.section} was rejected — nothing was added to the page.${this.flow === 'compose' ? ' Repair the items below and call add_section again, or leave the section out if the evidence cannot support it.' : ''}`, result),
+        content: report(`add_section ${data.section} was rejected — nothing was added to the page.`, result),
         isError: true,
       };
     }
-    this.builder.apply(result.payload, meta, mode);
-    const ids = payloadIds(result.payload);
-    this.added.set(data.section, [...(this.added.get(data.section) ?? []), ...ids]);
+    // only what is now on the page: an append skips items already there (e.g. sent again by a re-issued turn)
+    const ids = this.builder.apply(result.payload, meta, mode);
+    if (ids.length) this.added.set(data.section, [...(this.added.get(data.section) ?? []), ...ids]);
     const removed = result.rejected.length;
     this.progress({
       stage: 'Compose',
       detail: `${this.flow === 'answer' ? 'Extended' : 'Added'} ${this.builder.describe(data.section)}${removed ? ` (${removed} item${removed === 1 ? '' : 's'} removed by the source checks)` : ''}`,
       provider: PROVIDER_COMPOSE,
+      reader: { kind: 'section', section: data.section },
     });
     this.emit({ type: 'study', study: this.snapshot(), complete: this.flow === 'answer' });
+    // kept short: the page so far and how to repair are said once per turn, in turnSummary
     const head =
       `Accepted ${result.accepted} item${result.accepted === 1 ? '' : 's'} in ${data.section}${removed ? `; rejected ${removed}` : ''}` +
-      (this.flow === 'answer' ? ' (follow-ups append to the page; items already on it are skipped).' : ` (mode ${mode}).${theologyNote}`) +
-      ` Page so far: ${this.builder.sections.map((s) => this.builder.describe(s)).join('; ')}.` +
-      (removed && this.flow === 'compose' ? ' If a rejected item matters, call add_section again for this section with the complete corrected list; otherwise move on.' : '');
+      (this.flow === 'answer' ? ' (follow-ups append to the page; items already on it are skipped).' : ` (mode ${mode}).${theologyNote}`);
     return { content: report(head, result), isError: false };
   }
 
@@ -446,9 +569,15 @@ class Run {
     return out;
   }
 
-  private async finishPage(input: unknown, turn: number): Promise<ToolExecution> {
+  private async finishPage(input: unknown, turn: number, afterRejection: boolean): Promise<ToolExecution> {
     if (!this.builder.hasBegun) return error('Call begin_page first.');
     if (this.builder.sectionCount === 0) return error('Add at least one section with add_section before finish_page.');
+    // the opening and concepts describe the page: they cannot be written before the model has seen what a rejection took off it
+    if (afterRejection) {
+      return error(
+        'finish_page was not accepted: an add_section earlier in this turn was rejected (wholly or in part), and this opening was written before you saw what the page lost. Read the results above, then send finish_page in your next turn, describing only what is on the page.',
+      );
+    }
     const r = await this.validator.finish(input, this.builder.info());
     this.record(turn, 'finish_page', r);
     this.rejectedBy.set('finish', r.rejected.length);
@@ -466,7 +595,13 @@ class Run {
     return { content: report('The page is finished. Do not call any more tools.', r), isError: false };
   }
 
-  private async reply(input: unknown, turn: number): Promise<ToolExecution> {
+  private async reply(input: unknown, turn: number, afterRejection: boolean): Promise<ToolExecution> {
+    // like finish_page: an answer written alongside a page extension may speak of items that did not land
+    if (afterRejection) {
+      return error(
+        'reply was not accepted: an add_section earlier in this turn was rejected (wholly or in part), and this answer was written before you saw what the page lost. Read the results above, then call reply in your next turn, referring only to what is on the page.',
+      );
+    }
     const r = await this.validator.reply(input, { page: this.builder.info(), readerText: this.readerText });
     this.record(turn, 'reply', r);
     if (!r.reply) {
@@ -526,7 +661,7 @@ class Run {
       studyId,
       model: this.config.model,
       modelUsed: this.modelUsed,
-      fallbackTurns: this.turns.filter((t) => t.fallback).length,
+      fallbackTurns: this.servedTurns.filter((t) => t.fallback).length,
       versions: { kb: fp.kb, generator: fp.generator },
       effort: this.config.effort,
       budgets: { maxResearchCalls: this.maxResearchCalls, researchMs: this.config.researchMs, totalMs: this.config.totalMs, maxTurns: this.config.maxTurns },
@@ -593,6 +728,7 @@ export async function runCompose(req: ComposeRequest, deps: RunDeps, emit: Emit,
       stage: 'Model',
       detail: `${config.model} is planning the research for “${req.query.trim()}”`,
       provider: `anthropic:${config.model}`,
+      reader: { kind: 'planning' },
     });
 
     // 3. Model loop
@@ -754,7 +890,7 @@ export async function runAnswer(req: AnswerRequest, deps: RunDeps, emit: Emit, s
     await deps.kb.ready();
     const builder = new PageBuilder(deps.kb.providers, study, { begun: true, idPrefix: `${study.id}:f${shortHash(`${req.question}|${now()}`, 6)}` });
     run = new Run('answer', deps, emit, builder, req.translation, study.depth === 'generated', req.question, req.locale ?? 'en');
-    run.progress({ stage: 'Model', detail: `${config.model} is researching your question`, provider: `anthropic:${config.model}` });
+    run.progress({ stage: 'Model', detail: `${config.model} is researching your question`, provider: `anthropic:${config.model}`, reader: { kind: 'planning' } });
     const messages: BetaMessageParam[] = [{ role: 'user', content: answerUserMessage(req, config.maxAnswerResearchCalls) }];
     const outcome = await loopWithDeadline(run, deps.client, messages, signal);
     end = outcome.end;
@@ -871,7 +1007,11 @@ async function loopWithDeadline(run: Run, client: ModelClient, messages: BetaMes
         ...(run.deps.retryDelaysMs ? { retryDelaysMs: run.deps.retryDelaysMs } : {}),
       },
       {
-        executeTools: (blocks) => run.executeTools(blocks),
+        executeTools: (blocks, turn, early) => run.executeTools(blocks, turn, early),
+        runsEarly: (name) => run.runsEarly(name),
+        executeEarly: (block, turn, before) => run.executeEarly(block, turn, before),
+        discardEarly: (calls) => run.discardEarly(calls),
+        retryNote: (calls) => run.retryNote(calls),
         isDone: () => (run.flow === 'compose' ? run.finished : run.replyResult != null),
         budgetMessage: () => run.budgetMessage(),
         nudge: (attempt) => run.nudge(attempt),
@@ -892,6 +1032,18 @@ function error(content: string): ToolExecution {
   return { content: `Error: ${content}`, isError: true };
 }
 
+/** Make `map` hold exactly the entries of `from`. */
+function refill<K, V>(map: Map<K, V>, from: ReadonlyMap<K, V>): void {
+  map.clear();
+  for (const [k, v] of from) map.set(k, v);
+}
+
+/** " key-passages" for an add_section input naming its section, else "". */
+function sectionOf(input: unknown): string {
+  const section = input && typeof input === 'object' ? (input as { section?: unknown }).section : undefined;
+  return typeof section === 'string' ? ` ${section}` : '';
+}
+
 /** Tool-result text for a validator decision: what was accepted, rejected (and why), adjusted, hydrated. */
 export function report(head: string, d: Decision): string {
   const lines = [head];
@@ -908,17 +1060,6 @@ export function report(head: string, d: Decision): string {
     for (const n of d.notes) lines.push(`- ${n}`);
   }
   return lines.join('\n');
-}
-
-function payloadIds(p: SectionPayload): string[] {
-  switch (p.section) {
-    case 'literary-context':
-      return p.literary.features.map((f) => f.id);
-    case 'theology':
-      return [...p.themes.map((t) => t.id), ...p.perspectives.map((s) => s.id)];
-    default:
-      return p.items.map((x) => x.id);
-  }
 }
 
 function dedupeCitations(citations: readonly Citation[]): Citation[] {

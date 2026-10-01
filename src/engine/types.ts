@@ -61,7 +61,11 @@ export type EngineStreamEvent =
   /** a retrieval / composition step, as it happens */
   | { type: 'progress'; step: PipelineStep }
   /** the study being composed; `complete: false` while sections are still arriving */
-  | { type: 'study'; study: Study; complete: boolean };
+  | { type: 'study'; study: Study; complete: boolean }
+  /** the engine handed the request to the inference layer: a new page is being composed, or a follow-up researched */
+  | { type: 'phase'; phase: LivePhase };
+
+export type LivePhase = 'compose' | 'answer';
 
 export interface EngineContext {
   study: Study | null;

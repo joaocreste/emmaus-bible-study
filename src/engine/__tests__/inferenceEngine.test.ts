@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ChatMessage, CuratedTopic, MessageBlock, Study } from '../../domain/models';
+import type { ChatMessage, CuratedTopic, MessageBlock, PassageRef, Study } from '../../domain/models';
 import { synthesis } from '../../domain/provenance';
 import { AVAILABLE, composeEvents, fakeClient, generatedStudy, NO_KEY, step } from '../../inference/__tests__/fakes';
 import { InferenceStudyEngine, isNewStudyRequest, needsResearch, stripEvidenceMarkers, wantsNewPage } from '../InferenceStudyEngine';
@@ -89,7 +89,13 @@ describe('InferenceStudyEngine — new studies', () => {
     expect(r.study?.depth).toBe('generated');
     expect(r.study?.title).not.toBe('Marriage');
     // live events reach the session in order
-    expect(events.map((e) => (e.type === 'study' ? `study:${e.complete}` : e.type))).toEqual(['progress', 'study:false', 'progress', 'study:true']);
+    expect(events.map((e) => (e.type === 'study' ? `study:${e.complete}` : e.type === 'phase' ? `phase:${e.phase}` : e.type))).toEqual([
+      'phase:compose',
+      'progress',
+      'study:false',
+      'progress',
+      'study:true',
+    ]);
     // the reply is shaped for the chat
     expect(r.reply.role).toBe('assistant');
     expect(r.reply.studyId).toBe('generated-divorce-1');
@@ -145,9 +151,12 @@ describe('InferenceStudyEngine — new studies', () => {
     const first = await engine.respond('divorce', ctx());
     expect(client.composeCalls).toHaveLength(0);
     expect(first.study).toMatchObject({ title: 'Marriage', depth: 'library' });
-    expect(notes(first)).toEqual(['Live composition is unavailable — add ANTHROPIC_API_KEY to .env.local. Showing the library topic study instead.']);
-    expect(first.reply.text).toContain('Live composition is unavailable');
-    expect(first.trace[1]).toEqual({ stage: 'Routing', detail: 'Live composition unavailable — add ANTHROPIC_API_KEY to .env.local', provider: 'engine:inference' });
+    // in the reader's words — the server's setup details stay out of the chat
+    expect(notes(first)).toEqual([
+      'Live composition: new studies cannot be composed right now. Studies from the library still open as usual. Showing the library topic study instead.',
+    ]);
+    expect(first.reply.text).not.toMatch(/ANTHROPIC|\.env/);
+    expect(first.trace[1]).toMatchObject({ stage: 'Routing', provider: 'engine:inference' });
 
     const second = await engine.respond('Matthew 5–7', ctx());
     expect(second.study?.depth).toBe('library');
@@ -158,8 +167,8 @@ describe('InferenceStudyEngine — new studies', () => {
   it('explains an unavailable server in the reader’s language when the server sends a reason code', async () => {
     const { engine } = engineWith(fakeClient({ ...NO_KEY, reasonCode: 'no-credit' }));
     const r = await engine.respond('divorce', ctx(null, { locale: 'pt', translation: 'BLIVRE' }));
-    expect(notes(r).join(' ')).toContain('sem créditos');
-    expect(notes(r).join(' ')).not.toContain('ANTHROPIC_API_KEY to .env.local');
+    expect(notes(r).join(' ')).toContain('Composição ao vivo: a geração de novos estudos está pausada no momento.');
+    expect(notes(r).join(' ')).not.toMatch(/ANTHROPIC|\.env|Claude|API/);
   });
 
   it('does not ask for the status when the reader turned live composition off', async () => {
@@ -178,17 +187,17 @@ describe('InferenceStudyEngine — new studies', () => {
     const { engine } = engineWith(client);
     const r = await engine.respond('divorce', ctx());
     expect(r.study?.title).toBe('Marriage');
-    expect(notes(r)[0]).toMatch(/needs an Anthropic API key.*ANTHROPIC_API_KEY.*\.env\.local.*Showing the library topic study instead\./);
+    expect(notes(r)[0]).toBe('Composing new studies is not set up here yet. Showing the library topic study instead.');
     expect(client.invalidated).toBe(1);
     expect(r.trace.some((s) => s.stage === 'Inference' && /no-credentials/.test(s.detail))).toBe(true);
   });
 
   it.each([
-    ['refusal', /declined to compose/],
-    ['rate-limited', /rate-limited/],
-    ['overloaded', /overloaded/],
-    ['invalid-output', /passes the source checks/],
-    ['internal', /Live composition failed — the server broke/],
+    ['refusal', /^A study could not be composed for this question/],
+    ['rate-limited', /^Many studies are being composed right now — try again in a minute/],
+    ['overloaded', /^Composing studies is busy right now/],
+    ['invalid-output', /every statement rests on a cited source/],
+    ['internal', /^The study could not be composed — something went wrong while composing the study\./],
   ] as const)('explains a %s error honestly', async (code, pattern) => {
     const client = fakeClient();
     client.composeScript = [{ type: 'error', code, message: 'The server broke.' }, { type: 'done' }];
@@ -206,7 +215,10 @@ describe('InferenceStudyEngine — new studies', () => {
     const r = await engine.respond('divorce', ctx());
     expect(r.study?.id).toBe('generated-divorce-1');
     expect(r.reply.studyId).toBe('generated-divorce-1');
-    expect(notes(r)[0]).toMatch(/^Composition stopped before the page was finished — the theology section failed validation twice\. The sections shown passed the source checks/);
+    expect(notes(r)[0]).toBe(
+      'The study stopped before it was finished — the remaining sections could not be backed by cited sources. The sections shown are complete and checked against their sources; ask again to try for the rest.',
+    );
+    expect(notes(r)[0]).not.toMatch(/validation/);
   });
 
   it('stops honestly when the reader starts something else mid-stream', async () => {
@@ -255,6 +267,34 @@ describe('InferenceStudyEngine — new studies', () => {
     expect(r.reply.updates?.[0].label).toBe('Regenerated Divorce — generated study');
   });
 
+  it('regenerates a topic page as a topic, not as its anchor passage', async () => {
+    const { engine, client } = engineWith();
+    const study = generatedStudy();
+    expect(study.passage).toBeDefined();
+    await engine.regenerate(study, ctx(study));
+    expect(client.composeCalls[0].hint).toEqual({ topic: 'Divorce' });
+  });
+
+  it('regenerates a passage page with its passage as the hint', async () => {
+    const passage: PassageRef = { book: 'MAT', startChapter: 5, endChapter: 7 };
+    const study = generatedStudy({ kind: 'passage', title: 'Matthew 5–7', passage, topic: undefined, generation: { model: 'claude-opus-5', query: 'Matthew 5-7', createdAt: 0, evidenceCount: 3, retrievalCalls: 2 } });
+    const client = fakeClient();
+    client.composeScript = composeEvents(study);
+    const { engine } = engineWith(client);
+    await engine.regenerate(study, ctx(study));
+    expect(client.composeCalls[0]).toMatchObject({ query: 'Matthew 5-7', regenerate: true, hint: { passage } });
+  });
+
+  it('regenerates a page composed this session under the hint it was composed with', async () => {
+    const { engine, client } = engineWith();
+    const r = await engine.respond('divorce', ctx());
+    await engine.regenerate(r.study!, ctx(r.study!));
+    expect(client.composeCalls).toHaveLength(2);
+    expect(client.composeCalls[1]).toMatchObject({ query: 'divorce', regenerate: true });
+    expect(client.composeCalls[1].hint).toEqual(client.composeCalls[0].hint);
+    expect(client.composeCalls[1].hint).toEqual({ topic: 'divorce' });
+  });
+
   it('keeps the page when regenerating fails', async () => {
     const client = fakeClient();
     client.composeScript = [{ type: 'error', code: 'overloaded', message: 'busy' }, { type: 'done' }];
@@ -263,7 +303,65 @@ describe('InferenceStudyEngine — new studies', () => {
     const r = await engine.regenerate(study, ctx(study));
     expect(r.study).toBeUndefined();
     expect(text(r)).toMatch(/stays as it was/);
-    expect(notes(r)[0]).toMatch(/overloaded/);
+    expect(notes(r)[0]).toMatch(/^Composing studies is busy right now/);
+  });
+});
+
+describe('InferenceStudyEngine — complex questions', () => {
+  const ABUSE = 'Is divorce allowed in an abusive marriage, and can I remarry?';
+  const ABUSE_PT = 'Em um relacionamento abusivo, sem parceria, é possível o divórcio e pensar em um novo casamento?';
+
+  it('composes a page for the question itself, not the library topic it mentions', async () => {
+    const { engine, client } = engineWith();
+    const r = await engine.respond(ABUSE, ctx());
+    // the question is the query; neither "marriage" nor the whole sentence goes as a topic hint
+    expect(client.composeCalls).toEqual([{ query: ABUSE, translation: 'BSB' }]);
+    expect(r.study?.depth).toBe('generated');
+  });
+
+  it('composes a new page for a complex question asked while another page is open', async () => {
+    const { engine, client } = engineWith();
+    const r = await engine.respond(ABUSE_PT, ctx(generatedStudy(), { locale: 'pt' }));
+    expect(client.answerCalls).toHaveLength(0);
+    expect(client.composeCalls).toEqual([{ query: ABUSE_PT, translation: 'BSB', locale: 'pt' }]);
+    expect(r.study?.depth).toBe('generated');
+  });
+
+  it('composes a new page for “what do theologians say…” with several parts, even on a curated page', async () => {
+    const { engine, client } = engineWith();
+    const romans = (await engine.respond('Romans 8', ctx())).study!;
+    const q = 'O que a bíblia e os teólogos falam no caso de uma separação, um divórcio quando há um relacionamento abusivo e sem parceria entre o casal, irresolvível mesmo tentando com conselheiros?';
+    const r = await engine.respond(q, ctx(romans, { locale: 'pt' }));
+    expect(client.composeCalls).toEqual([{ query: q, translation: 'BSB', locale: 'pt' }]);
+    expect(r.study?.depth).toBe('generated');
+  });
+
+  it('keeps short follow-ups on the open page', async () => {
+    const { engine, client } = engineWith();
+    await engine.respond('What about tattoos?', ctx(generatedStudy()));
+    expect(client.composeCalls).toHaveLength(0);
+    expect(client.answerCalls).toHaveLength(1);
+  });
+
+  it('without live composition, opens the library topic the question turns on and names its key points', async () => {
+    const { engine, client } = engineWith(fakeClient(), false);
+    const r = await engine.respond(ABUSE, ctx());
+    expect(client.composeCalls).toHaveLength(0);
+    expect(r.study).toMatchObject({ title: 'Marriage', depth: 'library' });
+    expect(text(r)).toMatch(/^Your question turns on \*\*divorce\*\* and \*\*marriage\*\*\. The library has no study of the question as a whole, so I’ve opened the Marriage study/);
+    expect(r.trace.some((s) => s.stage === 'Question')).toBe(true);
+    // …and says plainly what would answer the question itself
+    expect(notes(r)).toEqual(['This question needs a study composed for it, and **Live composition** is turned off. Turn it on in Reader settings (Aa) and ask again.']);
+  });
+
+  it('says every time that an unavailable server leaves a complex question unanswered', async () => {
+    const { engine, client } = engineWith(fakeClient(NO_KEY));
+    for (let i = 0; i < 2; i++) {
+      const r = await engine.respond(ABUSE_PT, ctx(null, { locale: 'pt' }));
+      expect(client.composeCalls).toHaveLength(0);
+      expect(notes(r)).toHaveLength(1);
+      expect(notes(r)[0]).toBe('Esta pergunta precisa de um estudo gerado para ela, mas não é possível gerar novos estudos agora. Os estudos da biblioteca continuam abrindo normalmente. Quando voltar, pergunte de novo.');
+    }
   });
 });
 
@@ -340,7 +438,7 @@ describe('InferenceStudyEngine — follow-ups', () => {
     expect(r.study).toBe(patched);
     expect(r.focus).toEqual({ section: 'theology' });
     expect(r.conversation).toEqual({ activeConceptId: 'concept-hardness' });
-    expect(events.map((e) => e.type)).toEqual(['progress', 'study']);
+    expect(events.map((e) => (e.type === 'phase' ? `phase:${e.phase}` : e.type))).toEqual(['phase:answer', 'progress', 'study']);
     expect(r.trace.map((s) => s.stage)).toEqual(['Intent', 'Routing', 'Research']);
   });
 
@@ -350,7 +448,7 @@ describe('InferenceStudyEngine — follow-ups', () => {
     const { engine } = engineWith(client);
     const r = await engine.respond('What about tattoos?', ctx(generatedStudy(), { history }));
     expect(r.reply.declined).toBe(true);
-    expect(notes(r)[0]).toMatch(/^I also tried to research this in the knowledge base, but the model is rate-limited/);
+    expect(notes(r)[0]).toMatch(/^I also tried to look this up in the research library, but many studies are being composed right now/);
   });
 
   it('does not research when live composition is unavailable', async () => {

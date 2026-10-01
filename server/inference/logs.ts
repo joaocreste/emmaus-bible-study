@@ -26,6 +26,8 @@ export interface ToolCallLog {
 export interface DecisionLog {
   turn: number;
   tool: string;
+  /** the tool_use id of the call decided (absent in logs written before it was recorded) */
+  callId?: string;
   section?: string;
   mode?: string;
   accepted: number;
@@ -62,8 +64,9 @@ export interface RunLog {
   ledger: Evidence[];
   toolCalls: ToolCallLog[];
   decisions: DecisionLog[];
+  /** every turn, and every attempt that failed (`failed: true`: re-issued or ending the run — billed, not a turn) */
   turns: TurnRecord[];
-  /** summed over every turn (and, per turn, over usage.iterations: declined and fallback attempts included) */
+  /** summed over every turn and failed attempt (and, per turn, over usage.iterations: declined and fallback attempts included) */
   usage: { input: number; output: number; cacheRead: number; cacheCreation: number };
   /** progress steps as the reader saw them */
   steps: { stage: string; detail: string; provider?: string; atMs: number }[];

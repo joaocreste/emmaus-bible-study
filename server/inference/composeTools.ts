@@ -119,7 +119,7 @@ const str = (description: string): Json => ({ type: 'string', description });
 const evidence: Json = {
   type: 'array',
   items: { type: 'string' },
-  description: 'Ledger ids of the retrieved evidence this rests on, e.g. ["E3","E14"] (at least one).',
+  description: 'Ledger ids it rests on, e.g. ["E3","E14"] (at least one).',
 };
 const refs = (description: string): Json => ({ type: 'array', items: { type: 'string' }, description });
 const cited = (description: string): Json => ({
@@ -132,9 +132,9 @@ const keyPassageItem: Json = {
   type: 'object',
   description: 'key-passages item',
   properties: {
-    reference: str('The passage, e.g. "Deuteronomy 24:1–4". It must appear in the cited evidence (a topical-index entry or a passage you read).'),
+    reference: str('e.g. "Deuteronomy 24:1–4"; it must appear in the cited evidence (a topical-index entry or a passage you read).'),
     title: str('Short headline (≤ 8 words).'),
-    note: str('How this passage bears on the question (1–2 sentences, ≤ 45 words), paraphrasing the text you read.'),
+    note: str('How it bears on the question, paraphrasing the text you read (1–2 sentences, ≤ 45 words).'),
     group: str('Grouping label, e.g. "The Law and the Prophets", "Jesus’ teaching", "Paul’s counsel".'),
     evidence,
   },
@@ -157,23 +157,23 @@ const crossRefItem: Json = {
 
 const keyWordItem: Json = {
   type: 'object',
-  description: 'original-languages item (lemma, transliteration, gloss, grammar and counts are filled in from the lexicon — do not supply them)',
+  description: 'original-languages item (lemma, transliteration, gloss, grammar and counts come from the lexicon — do not supply them)',
   properties: {
-    strong: str('Strong’s number found in your lexicon or original_text evidence, e.g. "G630".'),
+    strong: str('Strong’s number from your lexicon or original_text evidence, e.g. "G630".'),
     english: str('The English word or phrase readers see, e.g. "divorce".'),
     anchor: {
       type: 'object',
-      description: 'Where to underline the word: one verse and the exact English phrase as it appears in that verse (BSB).',
+      description: 'Where to underline the word, in one verse.',
       properties: {
         reference: str('One verse, e.g. "Matthew 19:3".'),
         phrase: str('Exact phrase from the BSB text of that verse.'),
-        readerPhrase: str('Non-English pages only: the exact words that render this word in the reader’s version of that verse (as read_passage showed it), so it is underlined there too.'),
+        readerPhrase: str('Non-English pages only: the exact words rendering it in the reader’s version of that verse (as read_passage showed it), underlined there too.'),
       },
       required: ['reference', 'phrase'],
     },
     significance: str('Why the word matters here, context first (≤ 60 words). Other uses only with their references (e.g. "Luke 10:41"): the server checks them against this word’s concordance, and you must have read them.'),
     semanticRange: { type: 'array', items: { type: 'string' }, description: 'Senses as stated in the lexicon evidence (2–4 short phrases).' },
-    caution: str('Optional caution against over-reading the word — root fallacy, one sense read into every use (≤ 30 words). Never a moral verdict.'),
+    caution: str('Optional warning against over-reading the word — root fallacy, one sense read into every use, "the aorist means once for all" (≤ 30 words). Never a moral verdict.'),
     evidence,
   },
   required: ['strong', 'english', 'significance', 'evidence'],
@@ -196,7 +196,7 @@ const contextItem: Json = {
 export const BEGIN_PAGE_TOOL: BetaTool = {
   name: 'begin_page',
   description:
-    'Start the study page once your research is done: title, what the page covers and its summary. Call it exactly once, before any add_section (after sections exist a second call may only update title, subtitle, question and summary — never kind or passage). Title, subtitle and question are checked like the summary, against its evidence. The reader sees the page appear as soon as it is accepted.',
+    'Start the study page once your research is done: title, what the page covers and its summary. Call it exactly once, first, in the same turn as the sections (after sections exist a second call may only update title, subtitle, question and summary — never kind or passage). Title, subtitle and question are checked like the summary, against its evidence.',
   eager_input_streaming: true,
   input_schema: {
     type: 'object',
@@ -215,7 +215,7 @@ export const BEGIN_PAGE_TOOL: BetaTool = {
 export const ADD_SECTION_TOOL: BetaTool = {
   name: 'add_section',
   description:
-    'Add one section to the page (one call per section; several calls may be sent in one turn, in page order). Fields by section: key-passages → items (topic pages); cross-references → items (from must lie inside the page passage); original-languages → items; historical-context → items; literary-context → placeInBook/argument/features; theology → themes and/or perspectives; commentary → voices. The result lists what was accepted and what was rejected and why; to repair, call add_section again for the same section with the complete corrected list (mode "replace", the default, replaces the section — for theology, only the list(s) the call carries: themes, perspectives or both; "append" adds to it).',
+    'Add one section to the page: one call per section, sent together in page order (on a new page, in the same turn as begin_page). Fields by section: key-passages → items (topic pages); cross-references → items (from inside the page passage); original-languages, historical-context → items; literary-context → placeInBook/argument/features; theology → themes and/or perspectives; commentary → voices. To repair, call it again for the same section with the complete corrected list: mode "replace" (the default) replaces the section — for theology, only the list(s) the call carries — and "append" adds to it.',
   eager_input_streaming: true,
   input_schema: {
     type: 'object',
@@ -226,7 +226,7 @@ export const ADD_SECTION_TOOL: BetaTool = {
       intro: str('Optional one-sentence introduction (≤ 30 words). Uncited framing: no references outside the page passage, names, traditions, dates or quotations.'),
       items: {
         type: 'array',
-        description: 'key-passages, cross-references, original-languages and historical-context: the items (shape per section).',
+        description: 'key-passages, cross-references, original-languages, historical-context: the items (shape per section).',
         items: { anyOf: [keyPassageItem, crossRefItem, keyWordItem, contextItem] },
       },
       placeInBook: cited('literary-context: where the passage sits in the book’s flow (≤ 60 words).'),
@@ -293,7 +293,7 @@ export const ADD_SECTION_TOOL: BetaTool = {
       },
       voices: {
         type: 'array',
-        description: 'commentary: voices from retrieved texts that have an author — the evidence header shows “by …” (commentaries, study notes, and confessions or reference works with a recorded author). Author and work come from the evidence item. A text without an author belongs in a theme, context item or perspectives position instead.',
+        description: 'commentary: voices from retrieved texts that have an author (the evidence header shows “by …”); author and work come from the evidence item. A text without an author belongs in a theme, context item or perspectives position instead.',
         items: {
           type: 'object',
           properties: {
@@ -314,7 +314,7 @@ export const ADD_SECTION_TOOL: BetaTool = {
 export const FINISH_PAGE_TOOL: BetaTool = {
   name: 'finish_page',
   description:
-    'Finish the page after its sections: the opening chat message, concepts for quick follow-ups and suggested questions. Call it last; the page is complete when it is accepted.',
+    'Finish the page: the opening chat message, concepts for quick follow-ups and suggested questions. Call it last, in the turn after the sections, after any repairs; the page is complete when it is accepted.',
   eager_input_streaming: true,
   input_schema: {
     type: 'object',
@@ -345,7 +345,7 @@ export const FINISH_PAGE_TOOL: BetaTool = {
 export const REPLY_TOOL: BetaTool = {
   name: 'reply',
   description:
-    'Answer the reader’s follow-up question (follow-up answers only; never while composing a page). Call it once, after any research and add_section calls.',
+    'Answer the reader’s follow-up question (follow-up answers only; never while composing a page). Call it once, after any research; it may share a turn with add_section calls, after them.',
   eager_input_streaming: true,
   input_schema: {
     type: 'object',

@@ -11,7 +11,7 @@
  * overwritten by the fresh page), so pages composed from an older knowledge base or
  * before a validator fix are never served as current.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { ChatMessage, PassageRef, Study, TranslationId } from '../../src/domain/models';
@@ -37,24 +37,37 @@ const GENERATOR_FILES = [
   'server/kb/traditions.ts',
 ];
 
-const generatorVersions = new Map<string, string>();
+/** Per root: the generator files' size + mtime when their hash was taken, and the hash. */
+const generatorVersions = new Map<string, { stamp: string; version: string }>();
 
-/** Hash of GENERATOR_REVISION and the generator's source files under `root` (memoised per root). */
-export function generatorVersion(root: string): string {
-  let v = generatorVersions.get(root);
-  if (!v) {
-    const parts = [`rev ${GENERATOR_REVISION}`];
-    for (const f of GENERATOR_FILES) {
-      try {
-        parts.push(`${f}\n${readFileSync(join(root, f), 'utf8')}`);
-      } catch {
-        parts.push(`${f}: missing`);
-      }
+/** Size and mtime of every generator file — a cheap check that none changed since the last hash (the dev server hot-reloads them). */
+function generatorStamp(root: string): string {
+  return GENERATOR_FILES.map((f) => {
+    try {
+      const s = statSync(join(root, f));
+      return `${s.size}:${s.mtimeMs}`;
+    } catch {
+      return 'missing';
     }
-    v = shortHash(parts.join('\n\n'), 12);
-    generatorVersions.set(root, v);
+  }).join('|');
+}
+
+/** Hash of GENERATOR_REVISION and the generator's source files under `root` (memoised per root until a file's size or mtime changes). */
+export function generatorVersion(root: string): string {
+  const stamp = generatorStamp(root);
+  const memo = generatorVersions.get(root);
+  if (memo?.stamp === stamp) return memo.version;
+  const parts = [`rev ${GENERATOR_REVISION}`];
+  for (const f of GENERATOR_FILES) {
+    try {
+      parts.push(`${f}\n${readFileSync(join(root, f), 'utf8')}`);
+    } catch {
+      parts.push(`${f}: missing`);
+    }
   }
-  return v;
+  const version = shortHash(parts.join('\n\n'), 12);
+  generatorVersions.set(root, { stamp, version });
+  return version;
 }
 
 /** What produced a cached page; a page is served only while all of it still holds. */

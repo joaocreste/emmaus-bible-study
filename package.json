@@ -14,6 +14,9 @@
     "data:build": "node scripts/data/build-all.ts",
     "kb:build": "node scripts/kb/build.ts",
     "test:e2e": "playwright test",
+    "eval:run": "node scripts/eval/run.ts",
+    "eval:score": "node scripts/eval/score.ts",
+    "eval:test": "vitest run --config scripts/eval/vitest.config.ts",
     "predev": "node scripts/ensure-data.ts"
   },
   "dependencies": {

@@ -25,6 +25,7 @@ import type { TopicMatchLike } from './assemble';
 import { blocksToPlainText, engineT, localeOf, note, para } from './compose';
 import { classifyMessage, type ClassifierEnv, type ParsedMessage } from './intent';
 import { LocalStudyEngine } from './LocalStudyEngine';
+import { asksNewQuestion } from './question';
 import { attempt, step } from './respond/env';
 import { bestPhraseScore, normalizePhrase, normalizeTopicQuery } from './text';
 import type { EngineContext, EngineResult, Intent, IntentKind, StudyEngine } from './types';
@@ -58,6 +59,8 @@ export class InferenceStudyEngine implements StudyEngine, StudyRegenerator {
   private readonly isEnabled: () => boolean;
   /** generated studies seen this session, by id (so earlier chat messages can reopen them) */
   private readonly generated = new Map<string, Study>();
+  /** the hint each generated study was composed under, by id (Regenerate resends it, so the fresh page replaces the same cache entry) */
+  private readonly hints = new Map<string, ComposeRequest['hint']>();
   /** unavailability reasons already explained in chat (explained once, then only traced) */
   private readonly explained = new Set<string>();
   private readonly topicPhrases = new Map<Locale, Promise<string[]>>();
@@ -85,15 +88,18 @@ export class InferenceStudyEngine implements StudyEngine, StudyRegenerator {
     }
 
     const local = await this.local.respond(message, ctx);
+    // A complex question of its own ("in an abusive marriage, may I divorce and remarry?") gets its own page.
+    const question = asksNewQuestion(message, intent, open ?? null);
 
-    // The local engine opened a different study: curated → keep it; library → compose instead when live.
+    // The local engine opened a different study: curated → keep it (unless it only covers part of a question);
+    // library → compose instead when live.
     if (local.study && local.study.id !== open?.id) {
-      if (local.study.depth === 'curated') return addSteps(local, [step('Routing', engineT(localeOf(ctx))('inference.curatedRoute'), PROVIDER)]);
-      return this.composeOrFallback(message, intent, local, ctx);
+      if (local.study.depth === 'curated' && !question) return addSteps(local, [step('Routing', engineT(localeOf(ctx))('inference.curatedRoute'), PROVIDER)]);
+      return this.composeOrFallback(message, intent, local, ctx, question);
     }
 
-    if (isNewStudyRequest(intent, ctx) && wantsNewPage(intent, local, ctx)) {
-      return this.composeOrFallback(message, intent, local, ctx);
+    if (question || (isNewStudyRequest(intent, ctx) && wantsNewPage(intent, local, ctx))) {
+      return this.composeOrFallback(message, intent, local, ctx, question);
     }
 
     // A follow-up the page could not answer: research it in the knowledge base.
@@ -133,16 +139,33 @@ export class InferenceStudyEngine implements StudyEngine, StudyRegenerator {
         declined: true,
       });
     }
-    return this.compose(query, intent, null, ctx, { regenerate: true, hint: { ...(study.passage ? { passage: study.passage } : {}), topic: study.topic?.name ?? query } });
+    // Resend the hint the page was composed under; a topic page's anchor passage is not a passage hint.
+    const hint = this.hints.has(study.id) ? this.hints.get(study.id) : hintFor(intent, study);
+    return this.compose(query, intent, null, ctx, { regenerate: true, ...(hint ? { hint } : {}) });
   }
 
   /* ---------------- routing ---------------- */
 
-  private async composeOrFallback(query: string, intent: Intent, local: EngineResult, ctx: EngineContext): Promise<EngineResult> {
+  private async composeOrFallback(query: string, intent: Intent, local: EngineResult, ctx: EngineContext, question = false): Promise<EngineResult> {
     const live = await this.live();
+    if (live.state !== 'on' && question) return this.questionWithoutLive(local, live, localeOf(ctx));
     if (live.state === 'off') return addSteps(local, [step('Routing', engineT(localeOf(ctx))('inference.offRoute'), PROVIDER)]);
     if (live.state === 'unavailable') return this.unavailable(local, live.status, localeOf(ctx));
-    return this.compose(query, intent, local, ctx, { hint: hintFor(intent, local.study) });
+    // A question is composed from its own words: neither the library entry the local engine fell back on
+    // nor the classifier's topic reading of the whole sentence is a hint.
+    return this.compose(query, intent, local, ctx, { hint: question ? {} : hintFor(intent, local.study) });
+  }
+
+  /**
+   * A complex question needs a composed page; the library can cover only part of it. Say so every time,
+   * with what would answer it — not only in the trace (off) or once per session (unavailable).
+   */
+  private questionWithoutLive(local: EngineResult, live: Exclude<Live, { state: 'on' }>, locale: Locale): EngineResult {
+    const t = engineT(locale);
+    const reason = live.state === 'off' ? undefined : statusPhrase(live.status, locale);
+    const route = reason ? t('inference.unavailableRoute', { reason }) : t('inference.offRoute');
+    const text = reason ? t('inference.questionUnavailable', { reason }) : t('inference.questionOff');
+    return withNote(addSteps(local, [step('Routing', route, PROVIDER)]), 'caution', text);
   }
 
   private unavailable(local: EngineResult, status: InferenceStatus, locale: Locale): EngineResult {
@@ -183,6 +206,7 @@ export class InferenceStudyEngine implements StudyEngine, StudyRegenerator {
       ...(options.hint && (options.hint.passage || options.hint.topic) ? { hint: options.hint } : {}),
       ...(options.regenerate ? { regenerate: true } : {}),
     };
+    ctx.onEvent?.({ type: 'phase', phase: 'compose' });
     let outcome: InferenceOutcome;
     try {
       outcome = await this.client.compose(request, { signal: ctx.signal, onEvent: (e) => this.forward(e, ctx) });
@@ -190,6 +214,7 @@ export class InferenceStudyEngine implements StudyEngine, StudyRegenerator {
       outcome = { complete: false, steps: [], error: { code: 'internal', message: error instanceof Error ? error.message : String(error) } };
     }
 
+    if (outcome.study) this.hints.set(outcome.study.id, request.hint);
     if (outcome.error?.code === 'aborted') return this.stopped(query, intent, outcome, ctx, routing);
     if (outcome.study) {
       const study = outcome.study;
@@ -197,7 +222,11 @@ export class InferenceStudyEngine implements StudyEngine, StudyRegenerator {
       const trace = [...routing, ...outcome.steps, summaryStep(study, outcome, locale)];
       let reply = this.adoptReply(outcome.reply, study, trace, options.regenerate ? 'Regenerated' : 'Composed', locale);
       if (outcome.error || !outcome.complete) {
-        const why = outcome.error ? errorPhrase(outcome.error, locale) : t('inference.streamEnded');
+        const why = !outcome.error
+          ? t('inference.streamEnded')
+          : outcome.error.code === 'invalid-output'
+            ? t('inference.partialUnverified')
+            : errorPhrase(outcome.error, locale);
         reply = appendNote(reply, 'caution', t('inference.stoppedEarly', { why }));
       }
       return {
@@ -241,6 +270,7 @@ export class InferenceStudyEngine implements StudyEngine, StudyRegenerator {
       translation: ctx.translation,
       ...(ctx.locale ? { locale: ctx.locale } : {}),
     };
+    ctx.onEvent?.({ type: 'phase', phase: 'answer' });
     let outcome: InferenceOutcome;
     try {
       outcome = await this.client.answer(request, { signal: ctx.signal, onEvent: (e) => this.forward(e, ctx) });
@@ -633,27 +663,30 @@ export function errorText(error: InferenceError, locale: Locale = 'en'): string 
   }
 }
 
-/** A server's status reason as a clause, in the reader's language when the server sent a code for it. */
+/**
+ * Why composition is unavailable, as a clause in the reader's words: the client's own messages and the
+ * server's codes come from the catalog; a server's free text (setup details, model ids) is never shown.
+ */
 function statusPhrase(status: InferenceStatus, locale: Locale): string {
-  if (locale === 'en' || !status.reasonCode || clientMessageId(status.reason)) return phrase(status.reason, locale);
+  if (clientMessageId(status.reason)) return phrase(status.reason, locale);
   return phrase(statusReasonText(status, locale), locale);
 }
 
-/** A failed run's message as a clause: the client's own messages as phrased below, a server's by its code. */
+/** A failed run's message as a clause, in the reader's words (see statusPhrase). */
 function errorPhrase(error: InferenceError, locale: Locale): string {
-  if (locale === 'en' || clientMessageId(error.message) || error.message.trim() === RETURNED_NOTHING) return phrase(error.message, locale);
+  if (clientMessageId(error.message) || error.message.trim() === RETURNED_NOTHING) return phrase(error.message, locale);
   return phrase(serverErrorText(error, locale), locale);
 }
 
 /**
  * A reason/message as a clause: trimmed, no final full stop, first letter lowered unless it is an acronym.
- * The client's own messages are shown in the reader's language; a server's reason is shown as sent.
+ * The client's own messages are shown in the reader's words, from the catalog.
  */
 function phrase(text: string | undefined, locale: Locale = 'en'): string {
-  const known: ClientMessageId | undefined = locale === 'en' ? undefined : clientMessageId(text);
+  const known: ClientMessageId | undefined = clientMessageId(text);
   const raw = known
     ? engineT(locale)(`inference.client.${known}`)
-    : locale !== 'en' && text?.trim() === RETURNED_NOTHING
+    : text?.trim() === RETURNED_NOTHING
       ? engineT(locale)('inference.returnedNothing')
       : text;
   const t = (raw ?? '').trim().replace(/[.\s]+$/, '');
@@ -661,6 +694,7 @@ function phrase(text: string | undefined, locale: Locale = 'en'): string {
   return lowerFirst(t);
 }
 
+/** "The study…" → "the study…", "A geração…" → "a geração…"; acronyms ("API") stay. */
 function lowerFirst(s: string): string {
-  return /^\p{Lu}\p{Ll}/u.test(s) ? s[0].toLowerCase() + s.slice(1) : s;
+  return /^\p{Lu}(\p{Ll}|\s)/u.test(s) ? s[0].toLowerCase() + s.slice(1) : s;
 }

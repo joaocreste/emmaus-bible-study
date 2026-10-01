@@ -1,9 +1,7 @@
 import { ArrowRight, ListTree, RotateCcw } from 'lucide-react';
 import { memo, useId, useMemo, type MouseEvent } from 'react';
 import type { ChatMessage as ChatMessageModel, Citation, SectionId } from '../../domain/models';
-import { translate } from '../../i18n/catalog';
 import { useI18n, useT } from '../../i18n/I18nProvider';
-import type { Locale } from '../../i18n/locales';
 import { cx } from '../../lib/cx';
 import { useSessionActions } from '../../state/session';
 import { CitationList } from '../common/SourceChip';
@@ -13,6 +11,7 @@ import { MessageScopeContext, messageDomId, useRestoreChatFocus } from './chatCo
 import styles from './ChatMessage.module.css';
 import { InlineText, MessageBlocks } from './MessageContent';
 import { ScriptText } from '../common/ScriptText';
+import { readerTrace } from './readerTrace';
 
 interface ChatMessageProps {
   message: ChatMessageModel;
@@ -79,7 +78,7 @@ function AssistantMessage({ message, isLatest, fallbackSuggestions, thinking, ca
   const { send, revisit, retry } = useSessionActions();
   const t = useT('chat');
   const tc = useT('common');
-  const { locale } = useI18n();
+  const { ref } = useI18n();
   const restoreFocus = useRestoreChatFocus();
   const updatesTitleId = useId();
   const citations = useMemo<Citation[]>(
@@ -88,7 +87,10 @@ function AssistantMessage({ message, isLatest, fallbackSuggestions, thinking, ca
   );
   const suggestions = (message.suggestions?.length ? message.suggestions : (fallbackSuggestions ?? [])).slice(0, 4);
   const declined = isDeclined(message);
-  const live = isLive(message);
+  const readerSteps = useMemo(() => {
+    const r = message.trace?.length ? readerTrace(message.trace) : null;
+    return r && r.sources.length ? r : null;
+  }, [message.trace]);
 
   const openUpdate = async (section: SectionId) => {
     await revisit(message.id, section);
@@ -171,31 +173,32 @@ function AssistantMessage({ message, isLatest, fallbackSuggestions, thinking, ca
           </div>
         )}
 
-        {!!message.trace?.length && (
+        {readerSteps && (
           <Disclosure
             className={styles.trace}
             summary={
               <span className={styles.traceSummary}>
                 <ListTree aria-hidden="true" className={styles.traceIcon} />
                 {t('trace.summary')}
-                <span className={styles.traceCount}>{t('trace.count', { count: message.trace.length })}</span>
+                <span className={styles.traceCount}>{t('trace.count', { count: readerSteps.sources.length })}</span>
               </span>
             }
           >
-            <ol className={styles.traceList}>
-              {message.trace.map((step, i) => (
-                <li key={i} className={styles.traceStep}>
-                  <span className={styles.traceStage}>{stageLabel(step.stage, locale)}</span>
+            <ul className={styles.traceList}>
+              {readerSteps.sources.map((source) => (
+                <li key={source} className={styles.traceStep}>
                   <span className={styles.traceDetail}>
-                    <ScriptText text={step.detail} />
+                    {source === 'scripture' && readerSteps.passages.length
+                      ? t('trace.source.scripturePassages', {
+                          refs: readerSteps.passages.map((p) => ref(p)).join('; '),
+                          more: readerSteps.morePassages,
+                        })
+                      : t(`trace.source.${source}`)}
                   </span>
-                  {step.provider && <code className={styles.traceProvider}>{step.provider}</code>}
                 </li>
               ))}
-            </ol>
-            <p className={styles.traceNote}>
-              {live ? t('trace.noteLive') : t('trace.note')}
-            </p>
+            </ul>
+            <p className={styles.traceNote}>{readerSteps.generated ? t('trace.noteLive') : t('trace.note')}</p>
           </Disclosure>
         )}
 
@@ -224,19 +227,6 @@ function AssistantMessage({ message, isLatest, fallbackSuggestions, thinking, ca
 /** A dashboard section's short label in the reader's language. */
 function sectionLabel(section: SectionId, tc: (key: `section.${SectionId}`) => string): string {
   return tc(`section.${section}`);
-}
-
-/** A pipeline stage name in the reader's language ('chat' `stage.<name>`); unknown stages as the engine wrote them. */
-function stageLabel(stage: string, locale: Locale): string {
-  const key = `stage.${stage}`;
-  const label = translate(locale, 'chat', key as never);
-  return label === key ? stage : label;
-}
-
-/** A reply composed (or researched) live by the inference layer. */
-function isLive(message: ChatMessageModel): boolean {
-  if (message.provenance?.verification === 'generated') return true;
-  return !!message.trace?.some((s) => s.provider === 'inference:compose' || s.provider === 'inference:answer');
 }
 
 /**

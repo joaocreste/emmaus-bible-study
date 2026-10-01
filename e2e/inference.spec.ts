@@ -14,7 +14,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { createServer, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import type { ChatMessage, Citation, PassageRef, ProvenancedText, Study } from '../src/domain/models';
+import type { ChatMessage, Citation, PassageRef, ProvenancedText, ReaderStep, Study } from '../src/domain/models';
 import { encodeEvent, type AnswerRequest, type ComposeRequest, type InferenceEvent, type InferenceStatus } from '../src/inference/protocol';
 import { ask, lastReply, watchErrors } from './helpers';
 
@@ -212,7 +212,7 @@ function divorceSnapshots(): Study[] {
   return [base, withContext, final];
 }
 
-const step = (stage: string, detail: string): InferenceEvent => ({ type: 'progress', step: { stage, detail, provider: 'kb:naves' } });
+const step = (stage: string, detail: string, reader?: ReaderStep): InferenceEvent => ({ type: 'progress', step: { stage, detail, provider: 'kb:naves', ...(reader ? { reader } : {}) } });
 
 function reply(text: string, citations: Citation[] = []): ChatMessage {
   return {
@@ -243,6 +243,7 @@ const NO_KEY: InferenceStatus = {
   available: false,
   model: 'claude-opus-5',
   reason: 'Add ANTHROPIC_API_KEY=… to .env.local and restart npm run dev',
+  reasonCode: 'no-credentials',
   knowledgeBase: { documents: 0, corpora: [] },
 };
 
@@ -350,9 +351,10 @@ test.describe('inference layer — a new page composed live for the reader’s q
       expect(composed[0]).toMatchObject({ query: 'divorce', translation: 'BSB' });
       expect(composed[0].regenerate).toBeUndefined();
 
-      // Live steps show while nothing has arrived yet.
-      s.send(step('Research', 'Searching Nave’s Topical Bible for “divorce”'));
-      await expect(page.getByText('Searching Nave’s Topical Bible for “divorce”').first()).toBeVisible();
+      // Live steps show while nothing has arrived yet — in study terms, not the server's technical wording.
+      s.send(step('Topics', 'Looking up “divorce” in Nave’s Topical Bible and Torrey’s', { kind: 'topics' }));
+      await expect(page.getByText('Looking the subject up in the topical Bible indexes…').first()).toBeVisible();
+      await expect(page.getByText(/Nave’s Topical Bible and Torrey’s/)).toHaveCount(0);
 
       const [first, second, final] = divorceSnapshots();
 
@@ -372,8 +374,8 @@ test.describe('inference layer — a new page composed live for the reader’s q
       expect(await page.getByTestId('composing-notice').evaluate((el) => el.nextElementSibling?.id)).toBe('section-sources');
 
       // The chat shows the live pipeline (newest first) while the page is being composed.
-      s.send(step('Compose', 'Historical context accepted (1 item)'));
-      await expect(page.locator('[class*="liveStep"]').first()).toHaveText('Historical context accepted (1 item)');
+      s.send(step('Compose', 'Added Historical context — 1 background note', { kind: 'section', section: 'historical-context' }));
+      await expect(page.locator('[class*="liveStep"]').first()).toHaveText('Ready: Historical & cultural context');
 
       // 2nd snapshot: historical context lands under the layout's heading, the page keeps its place.
       s.send({ type: 'study', study: second, complete: false });
@@ -402,7 +404,7 @@ test.describe('inference layer — a new page composed live for the reader’s q
 
       // Header meta line from study.generation.
       await expect(study.getByText('Composed from 3 sources')).toBeVisible();
-      await expect(study.getByText('claude-opus-5', { exact: true })).toBeVisible();
+      await expect(study.getByText(/claude/i)).toHaveCount(0); // the reader sees study terms, not the model
       await expect(study.getByRole('button', { name: 'Regenerate' })).toBeEnabled();
 
       expect(errors).toEqual([]);
@@ -539,19 +541,22 @@ test.describe('inference layer — a new page composed live for the reader’s q
     await expect(page.getByRole('heading', { level: 1, name: 'Marriage' })).toBeVisible();
     await expect(page.locator('main#study').getByText('Library study', { exact: true })).toBeVisible();
     const replyText = await lastReply(page);
-    expect(replyText).toMatch(/Live composition is unavailable — add ANTHROPIC_API_KEY=… to \.env\.local/);
+    // in the reader's words: the server's setup details (API key, .env) stay out of the app
+    expect(replyText).toMatch(/Live composition: composing new studies is not set up here yet\. Studies from the library still open as usual\./);
+    expect(replyText).not.toMatch(/ANTHROPIC|\.env|npm/);
     expect(replyText).toMatch(/Showing the library topic study instead/);
     expect(composeCalls).toBe(0);
 
     // The note is explained once, not repeated on every question.
     await ask(page, 'faith');
     await expect(page.getByRole('heading', { level: 1, name: 'Faith' })).toBeVisible();
-    expect(await lastReply(page)).not.toMatch(/Live composition is unavailable/);
+    expect(await lastReply(page)).not.toMatch(/Live composition:/);
 
     // The Reader settings popover says why.
     await page.getByRole('button', { name: /Reader settings/i }).first().click();
     await expect(page.getByRole('switch', { name: 'Live composition' })).toHaveAttribute('aria-checked', 'true');
-    await expect(page.getByText(/Unavailable — Add ANTHROPIC_API_KEY/)).toBeVisible();
+    await expect(page.getByText('Unavailable — Composing new studies is not set up here yet. Studies from the library still open as usual.')).toBeVisible();
+    await expect(page.getByText(/ANTHROPIC|\.env|claude/i)).toHaveCount(0);
     expect(errors).toEqual([]);
   });
 
@@ -565,7 +570,8 @@ test.describe('inference layer — a new page composed live for the reader’s q
     await page.goto('/');
     await page.getByRole('button', { name: /Reader settings/i }).first().click();
     const toggle = page.getByRole('switch', { name: 'Live composition' });
-    await expect(page.getByText(/Claude · claude-opus-5 · [\d,]+ knowledge-base documents/)).toBeVisible();
+    await expect(page.getByText(/^Ready · draws on [\d,]+ knowledge-base documents$/)).toBeVisible();
+    await expect(page.getByText(/claude/i)).toHaveCount(0);
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
     await page.keyboard.press('Escape');
@@ -574,6 +580,56 @@ test.describe('inference layer — a new page composed live for the reader’s q
     await startFromWelcome(page, 'divorce');
     await expect(page.getByRole('heading', { level: 1, name: 'Marriage' })).toBeVisible();
     expect(composeCalls).toBe(0);
+  });
+});
+
+test.describe('inference layer — complex questions', () => {
+  test('a question with several parts is composed as its own page, with its key points on the dashboard', async ({ page }) => {
+    const errors = watchErrors(page);
+    const sse = await sseServer();
+    const question = 'Is divorce allowed in an abusive marriage with no partnership, and may I think of marrying again?';
+    try {
+      await mockStatus(page, AVAILABLE);
+      const composed = await routeCompose(page, sse.url);
+      await page.goto('/');
+      await startFromWelcome(page, question);
+      const stream = await sse.next();
+      // until the first sections land, a card in the middle of the page says a study is being composed, and what is happening
+      const card = page.getByTestId('compose-card');
+      await expect(card.getByRole('heading', { name: 'Composing your study' })).toBeVisible();
+      await expect(card.getByText(`“${question}”`)).toBeVisible();
+      await expect(card.getByText('Getting ready to study your question…')).toBeVisible();
+      // what the study is doing and which passages it reads — never the model, budgets or checks
+      stream.send(
+        { type: 'progress', step: { stage: 'Model', detail: 'claude-opus-5 is planning the research', reader: { kind: 'planning' } } },
+        { type: 'progress', step: { stage: 'Search', detail: 'Searching the knowledge base for “divorce abuse desertion”', reader: { kind: 'search' } } },
+        { type: 'progress', step: { stage: 'Scripture', detail: 'Reading Matthew 19:3–9; 1 Corinthians 7:10–16 (BSB)', reader: { kind: 'scripture', refs: [ref('MAT', 19, 3, 9), ref('1CO', 7, 10, 16)] } } },
+        { type: 'progress', step: { stage: 'Check', detail: 'The page header did not pass the source checks — the model is repairing it' } },
+      );
+      await expect(card.getByText('Reading Matthew 19:3–9; 1 Corinthians 7:10–16', { exact: true })).toBeVisible();
+      await expect(card.getByText('Searching Bible dictionaries, confessions and Christian writers…')).toBeVisible();
+      await expect(card).not.toContainText(/claude|source checks|knowledge base for/i);
+      await page.screenshot({ path: test.info().outputPath('compose-card.png') });
+      streamWholePage(stream);
+      await expect(page.getByRole('heading', { level: 1, name: 'Divorce' })).toBeVisible();
+      await expect(card).toHaveCount(0);
+      // the question itself is composed — no library topic ("marriage") sent as a hint
+      expect(composed).toEqual([{ query: question, translation: 'BSB', locale: 'en' }]);
+
+      const points = page.getByRole('region', { name: 'Key points' });
+      await expect(points).toBeVisible();
+      const point = points.getByRole('button', { name: 'hardness of heart' });
+      await expect(point).toHaveAttribute('aria-expanded', 'false');
+      await point.click();
+      await expect(point).toHaveAttribute('aria-expanded', 'true');
+      await expect(points.getByText(/Moses permitted divorce because of the hardness of their hearts/)).toBeVisible();
+      await page.screenshot({ path: test.info().outputPath('key-points.png') });
+      await points.getByRole('button', { name: 'Show in the study' }).click();
+      await expect(page.getByText('hardness of heart — key point')).toBeVisible();
+      expect(errors).toEqual([]);
+    } finally {
+      await sse.close();
+    }
   });
 });
 

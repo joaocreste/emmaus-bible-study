@@ -29,7 +29,7 @@ function composedAt(ms: number, bcp47: string, now = Date.now()): string {
   return new Date(now).toDateString() === d.toDateString() ? time : `${d.toLocaleDateString(bcp47, { month: 'short', day: 'numeric' })}, ${time}`;
 }
 
-/** "Composed from 12 sources · claude-opus-5 · 2:14 PM · cached" + Regenerate. */
+/** "Composed from 12 sources · 2:14 PM · cached" + Regenerate (no model name: the reader sees study terms only). */
 function GenerationLine({ study, generation }: { study: Study; generation: GenerationInfo }) {
   const { status, canRegenerate, regenerate } = useSessionInternals();
   const t = useT('study');
@@ -47,7 +47,6 @@ function GenerationLine({ study, generation }: { study: Study; generation: Gener
     <div className={styles.generation}>
       <p className={styles.generationText} title={`${details}.`}>
         <span>{t('generation.sources', { count: sources })}</span>
-        {generation.model && <span>{generation.model}</span>}
         {when && (
           <span>
             <time dateTime={new Date(generation.createdAt).toISOString()}>{when}</time>

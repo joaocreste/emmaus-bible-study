@@ -16,6 +16,8 @@ import { SourcesSection } from './sections/SourcesSection';
 import { TheologySection } from './sections/TheologySection';
 import { SectionArrivalContext } from './sectionArrival';
 import { visibleSections, type DashboardSectionId } from './sectionOrder';
+import { KeyPoints } from './KeyPoints';
+import { useStepText } from '../shell/useStepText';
 import { StudyHeader } from './StudyHeader';
 import { StudyNavigation } from './StudyNavigation';
 import { scrollBehavior, scrollIntoViewSettled } from './StudyNavigation.utils';
@@ -89,7 +91,7 @@ function WorkspaceBody({ study }: { study: Study }) {
   const initialSections = useRef<ReadonlySet<SectionId> | null>(null);
   initialSections.current ??= new Set(sections);
   const arrivedLate = useCallback((id: SectionId) => !initialSections.current!.has(id), []);
-  const latestStep = liveSteps[liveSteps.length - 1];
+  const stepLines = useStepText().lines(liveSteps);
 
   // Adapt to the host: if the pane we are mounted in already scrolls (the app shell's <main>),
   // flow inside it; otherwise become the scroll container ourselves.
@@ -173,6 +175,7 @@ function WorkspaceBody({ study }: { study: Study }) {
     >
       <div className={styles.column}>
         <StudyHeader study={study} />
+        <KeyPoints study={study} />
       </div>
 
       <div ref={stickyRef} className={styles.sticky}>
@@ -189,7 +192,7 @@ function WorkspaceBody({ study }: { study: Study }) {
             // While a page is being composed, the next section lands just before Sources — say so there.
             return (
               <Fragment key={id}>
-                {composing && id === 'sources' && <ComposingNotice detail={latestStep?.detail} stepKey={liveSteps.length} />}
+                {composing && id === 'sources' && <ComposingNotice detail={stepLines[stepLines.length - 1]} stepKey={stepLines.length} />}
                 <Section study={study} index={i + 1} />
               </Fragment>
             );

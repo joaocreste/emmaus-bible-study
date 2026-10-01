@@ -92,6 +92,21 @@ describe('session — live composition', () => {
     expect(log.map((i) => (i.type === 'divider' ? `— ${i.title}` : i.message.id))).toEqual(['u1', 'a-gen', '— Divorce', 'u2']);
   });
 
+  it('records what the inference layer is doing for the request in flight, and forgets it afterwards', () => {
+    let s = start(createInitialState(DEFAULT_SETTINGS));
+    expect(s.livePhase).toBeNull();
+    s = sessionReducer(s, { type: 'stream/phase', phase: 'compose' });
+    expect(s.livePhase).toBe('compose');
+    s = snapshot(s, generatedStudy());
+    expect(s.livePhase).toBe('compose');
+    expect(sessionReducer(s, { type: 'request/success', result: success(generatedStudy()), isPhone: false }).livePhase).toBeNull();
+    expect(sessionReducer(s, { type: 'request/failure', message: { id: 'err', role: 'assistant', text: 'x', createdAt: 3 } }).livePhase).toBeNull();
+    // a late phase event after "New study" is ignored; a new request starts without one
+    const reset = sessionReducer(s, { type: 'reset' });
+    expect(sessionReducer(reset, { type: 'stream/phase', phase: 'answer' })).toBe(reset);
+    expect(start(sessionReducer(s, { type: 'request/success', result: success(undefined), isPhone: false }), 'u2').livePhase).toBeNull();
+  });
+
   it('marks the study as updated on phone while the reader is on the chat pane', () => {
     const s = snapshot(start(createInitialState(DEFAULT_SETTINGS)), generatedStudy(), false, true);
     expect(s.studyUpdatedWhileAway).toBe(true);

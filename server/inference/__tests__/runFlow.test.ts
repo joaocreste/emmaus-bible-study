@@ -16,7 +16,7 @@ import type { RunLog } from '../logs';
 import { runToolLoop, turnUsage } from '../loop';
 import type { BetaMessage } from '../modelClient';
 import { runCompose, type RunDeps } from '../run';
-import { createFakeKb, FakeModelClient, fail, message, overloadedError, reply, testConfig, textBlock, toolResults, toolUse, type ScriptedTurn } from './fakes';
+import { createFakeKb, fail, fallbackBlock, FakeModelClient, message, overloadedError, reply, testConfig, textBlock, toolResults, toolUse, type ScriptedTurn } from './fakes';
 
 const DIVORCE: ComposeRequest = { query: 'divorce', translation: 'BSB' };
 
@@ -49,7 +49,7 @@ const keyPassages = toolUse('add_section', {
 const finish = toolUse('finish_page', { opening: { text: 'A page on divorce from the passages Nave’s lists.', evidence: ['E1'] }, concepts: [], suggestedQuestions: ['What did Moses permit?'] });
 
 describe('research budget', () => {
-  it('read_passage takes several passages in one call, counted once; every result says how many calls are used', async () => {
+  it('read_passage takes several passages in one call, counted once; results carry no running count of calls', async () => {
     const kb = createFakeKb();
     const client = new FakeModelClient([
       reply([toolUse('read_passage', { references: ['Deuteronomy 24:1–4', 'Matthew 19:3–9', 'Malachi 2:14–16'] }), toolUse('original_text', { references: ['Deuteronomy 24:1', 'Matthew 19:9'] })]),
@@ -57,13 +57,16 @@ describe('research budget', () => {
       reply([textBlock('done')], 'end_turn'),
       reply([textBlock('done')], 'end_turn'),
     ]);
-    await collect((emit) => runCompose(DIVORCE, deps(client, { kb }), emit, new AbortController().signal));
+    // a budget of 2 holds both calls: three passages in one read_passage count once
+    await collect((emit) => runCompose(DIVORCE, deps(client, { kb, config: testConfig({ maxResearchCalls: 2 }) }), emit, new AbortController().signal));
     expect(kb.calls.filter((c) => c.method === 'passage')).toHaveLength(3);
     expect(kb.calls.filter((c) => c.method === 'originalText')).toHaveLength(2);
     const [passages, greek] = Array.from(toolResults(client.requests[1]).values());
+    expect([passages.isError, greek.isError]).toEqual([false, false]);
     expect(passages.content).toMatch(/3 items \(E1, E2, E3\)/);
-    expect(passages.content).toMatch(/Research calls used: 2 of 16\.$/);
-    expect(greek.content).toMatch(/Research calls used: 2 of 16\.$/);
+    // the budget is a ceiling, not a countdown: only the at-limit error mentions it
+    expect(passages.content).not.toMatch(/research calls|of 2/i);
+    expect(greek.content).not.toMatch(/research calls|of 2/i);
   });
 
   it('a search in a kind the knowledge base holds nothing of says so, so the model does not retry', async () => {
@@ -116,6 +119,36 @@ describe('composition tools', () => {
     expect(study.perspectives[0].perspectives[0].representatives).toEqual(['westminster-assembly']);
   });
 
+  it('begin_page and the sections come in one turn: each result stays short, the last one adds the page so far and the next step', async () => {
+    const context = toolUse('add_section', { section: 'historical-context', items: [{ category: 'customs', title: 'The certificate', summary: 'A certificate protected the wife.', evidence: [] }] });
+    const client = new FakeModelClient([research, reply([begin, keyPassages, context]), reply([finish])]);
+    const events = await collect((emit) => runCompose(DIVORCE, deps(client), emit, new AbortController().signal));
+    expect(errorOf(events)).toBeNull();
+    expect(finalStudy(events)?.complete).toBe(true);
+    const [started, kp, ctx] = Array.from(toolResults(client.requests[2]).values());
+    expect(started.content).toMatch(/^Page started: “Divorce in the Bible” \(topic page/);
+    expect(started.content).not.toMatch(/research calls|Now add/);
+    expect(kp.isError).toBe(false);
+    expect(kp.content).toMatch(/^Accepted 1 item in key-passages \(mode replace\)\./);
+    expect(ctx.isError).toBe(true);
+    expect(ctx.content).toMatch(/^add_section historical-context was rejected — nothing was added to the page\.\n/);
+    expect(ctx.content).toMatch(/cites no evidence/);
+    // said once, after the turn's last composition result
+    expect(ctx.content).toMatch(/\n\nPage so far: [^\n]+\. If a rejected item matters, call add_section again for its section with the complete corrected list; otherwise leave it out\. Send any repairs, any missing section and finish_page together in your next turn\.$/);
+    expect([started, kp].some((r) => /Page so far|add_section again/.test(r.content))).toBe(false);
+  });
+
+  it('the turn summary says what comes next: the sections after a lone begin_page, finish_page after a clean turn', async () => {
+    const client = new FakeModelClient([research, reply([begin]), reply([keyPassages]), reply([finish])]);
+    const events = await collect((emit) => runCompose(DIVORCE, deps(client), emit, new AbortController().signal));
+    expect(errorOf(events)).toBeNull();
+    expect(finalStudy(events)?.complete).toBe(true);
+    const [started] = Array.from(toolResults(client.requests[2]).values());
+    expect(started.content).toMatch(/\n\nPage so far: no sections\. Next, send add_section for every section the evidence supports, in page order, in one turn; finish_page comes in the turn after\.$/);
+    const [kp] = Array.from(toolResults(client.requests[3]).values());
+    expect(kp.content).toMatch(/^Accepted 1 item in key-passages \(mode replace\)\.\n\nPage so far: [^\n]+\. Next, send finish_page \(after any missing section\) in one turn\.$/);
+  });
+
   it('a second begin_page cannot change kind or passage once sections exist; it may update the title', async () => {
     const client = new FakeModelClient([
       research,
@@ -143,11 +176,45 @@ describe('transient API failures', () => {
   it('an overloaded error inside the stream is retried and the run completes', async () => {
     const streamed = new Anthropic.APIError(undefined, { type: 'error', error: { type: 'overloaded_error', message: 'Overloaded' } }, 'Overloaded', undefined);
     const logs: RunLog[] = [];
-    const client = new FakeModelClient([research, fail(streamed), reply([begin, keyPassages, finish])]);
+    const client = new FakeModelClient([research, fail(streamed, { input: 1500, cacheRead: 6000 }), reply([begin, keyPassages, finish])]);
     const events = await collect((emit) => runCompose(DIVORCE, deps(client, { writeLog: async (l) => (logs.push(l), null) }), emit, new AbortController().signal));
     expect(errorOf(events)).toBeNull();
     expect(finalStudy(events)?.complete).toBe(true);
-    expect(logs[0].turns.map((t) => t.retries)).toEqual([0, 1]);
+    expect(logs[0].turns.map((t) => [t.failed ?? false, t.retries])).toEqual([
+      [false, 0],
+      [true, 0],
+      [false, 1],
+    ]);
+    // the failed attempt's usage counts toward the run's
+    expect(logs[0].usage).toEqual({ input: 1200 * 2 + 1500, output: 300 * 2, cacheRead: 5000 * 2 + 6000, cacheCreation: 0 });
+  });
+
+  it('a failed attempt that streamed a fallback boundary does not count as served by the fallback model', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'emmaus-cache-'));
+    try {
+      const streamed = new Anthropic.APIError(undefined, { type: 'error', error: { type: 'overloaded_error', message: 'Overloaded' } }, 'Overloaded', undefined);
+      const declined: ScriptedTurn = async (_params, { start, stream }) => {
+        start({ input: 1500, cacheRead: 6000 });
+        await stream(fallbackBlock());
+        throw streamed;
+      };
+      const logs: RunLog[] = [];
+      const client = new FakeModelClient([research, declined, reply([begin, keyPassages, finish])]);
+      const events = await collect((emit) => runCompose(DIVORCE, deps(client, { cache: new PageCache(dir), writeLog: async (l) => (logs.push(l), null) }), emit, new AbortController().signal));
+      expect(finalStudy(events)?.complete).toBe(true);
+      expect(logs[0].turns.map((t) => [t.failed ?? false, t.fallback])).toEqual([
+        [false, false],
+        [true, true],
+        [false, false],
+      ]);
+      expect(logs[0].fallbackTurns).toBe(0);
+      expect(logs[0].modelUsed).toBe('claude-opus-5');
+      expect(events.some((e) => e.type === 'progress' && /served by the fallback model/.test(e.step.detail))).toBe(false);
+      // a complete page the configured model wrote is cached
+      expect(await readdir(dir)).toHaveLength(1);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 
   it('when retries are exhausted after sections were accepted, the checked sections are finalised (with a caution) and not cached', async () => {
@@ -307,6 +374,10 @@ describe('mid-conversation system messages', () => {
       { client, config: testConfig({ maxTurns: 6 }), system: [], tools: [], messages: [{ role: 'user', content: 'go' }], signal: new AbortController().signal, deadlineReached: () => false, retryDelaysMs: [0, 0] },
       {
         executeTools: async (blocks) => blocks.map(() => ({ content: 'ok', isError: false })),
+        runsEarly: () => false,
+        executeEarly: async () => ({ content: 'ok', isError: false }),
+        discardEarly: () => {},
+        retryNote: () => null,
         isDone: () => false,
         budgetMessage: () => (budget ? ((budget = false), 'Compose now.') : null),
         nudge: (n) => (n <= 1 ? 'Finish the page.' : null),

@@ -503,17 +503,48 @@ describe('evidence the model never read cannot be cited', () => {
     const ledger = new EvidenceLedger();
     const long = (i: number): EvidenceDraft => ({ kind: 'dictionary', title: `Entry ${i}`, text: `${'word '.repeat(700)}${i}`, sourceId: 'eastons-bible-dictionary', quotable: true });
     const entries = ledger.addAll([long(1), long(2), long(3), long(4)]);
-    const rendered = ledger.render(entries, 8000);
+    const rendered = ledger.render(entries, 6000);
     expect(rendered).toMatch(/\[E4\] Entry 4 — text not shown .* cannot be cited until you read it/);
     const v = new Validator({ ledger, refs: new RefChecker(providers.scripture), providers }, (p) => p);
     const c = v.cite(['E4']);
     expect(c.ok).toBe(false);
-    if (!c.ok) expect(c.reason).toMatch(/not read \(E4/);
+    if (!c.ok) expect(c.reason).toMatch(/not read \(E4.*open it with read_document \(`evidence`: its id\), then cite it in a later turn$/);
     const mixed = v.cite(['E1', 'E4']);
     expect(mixed.ok && mixed.evidence.map((e) => e.id)).toEqual(['E1']);
+    expect(mixed.ok && mixed.warnings.join(' ')).toMatch(/ignored E4: .*open it with read_document \(`evidence`: its id\), then cite it in a later turn$/);
     // shown in a later result → citable
     ledger.render(ledger.addAll([long(4)]), 28000);
     expect(v.cite(['E4']).ok).toBe(true);
+  });
+
+  it('a commentary voice on an item listed as “text not shown” is refused with the way to read it', async () => {
+    const ledger = new EvidenceLedger();
+    const long = (i: number): EvidenceDraft => ({ kind: 'dictionary', title: `Entry ${i}`, text: `${'word '.repeat(700)}${i}`, sourceId: 'eastons-bible-dictionary', quotable: true });
+    ledger.render(ledger.addAll([long(1), long(2), long(3), long(4)]), 6000);
+    const v = new Validator({ ledger, refs: new RefChecker(providers.scripture), providers }, (p) => p);
+    const r = await v.section({ section: 'commentary', voices: [{ evidence: 'E4', mode: 'summary', summary: 'The entry discusses the word.' }] }, topicPage());
+    expect(r.rejected[0].reason).toBe('you have not read E4 (its text was not shown) — open it with read_document (`evidence`: "E4"), then cite it in a later turn');
+  });
+
+  it('an item first shown by a call in the turn being applied (opened after “text not shown”, or newly retrieved) is citable only from the next turn', () => {
+    const ledger = new EvidenceLedger();
+    const long = (i: number): EvidenceDraft => ({ kind: 'dictionary', title: `Entry ${i}`, text: `${'word '.repeat(700)}${i}`, sourceId: 'eastons-bible-dictionary', quotable: true });
+    ledger.render(ledger.addAll([long(1), long(2), long(3), long(4)]), 6000);
+    const v = new Validator({ ledger, refs: new RefChecker(providers.scripture), providers }, (p) => p);
+    ledger.beginTurn();
+    ledger.renderWhole('E4'); // read_document { evidence: "E4" } earlier in the turn
+    ledger.render(ledger.addAll([long(5)]), 28000); // a search earlier in the turn
+    expect(ledger.isWithheld('E4')).toBe(false);
+    for (const id of ['E4', 'E5']) {
+      const c = v.cite([id]);
+      expect(c.ok).toBe(false);
+      if (!c.ok) expect(c.reason).toMatch(new RegExp(`had not read when you wrote it \\(${id}: a call in this same turn first showed its text`));
+    }
+    const mixed = v.cite(['E1', 'E4']);
+    expect(mixed.ok && mixed.evidence.map((e) => e.id)).toEqual(['E1']);
+    expect(mixed.ok && mixed.warnings.join(' ')).toMatch(/ignored E4: a call in this same turn first showed its text/);
+    ledger.endTurn();
+    expect(v.cite(['E4', 'E5']).ok).toBe(true);
   });
 
   it('the evidence header names the author and tradition so the model knows who can be a voice', () => {

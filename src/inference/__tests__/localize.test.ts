@@ -10,12 +10,18 @@ describe('localised inference codes', () => {
     expect(normalizeStatus({ available: false, reasonCode: 'bogus' })?.reasonCode).toBeUndefined();
   });
 
-  it('English keeps the server wording; other languages use the catalog', () => {
-    expect(statusReasonText(down, 'en')).toBe(down.reason);
-    expect(statusReasonText(down, 'pt')).toMatch(/sem créditos/);
-    expect(statusReasonText({ ...down, reasonCode: undefined }, 'fr')).toBe(down.reason);
+  it('speaks to the reader in every language, never with the server’s setup or model details', () => {
+    expect(statusReasonText(down, 'en')).toBe('Composing new studies is paused for now. Studies from the library still open as usual.');
+    expect(statusReasonText(down, 'pt')).toBe('A geração de novos estudos está pausada no momento. Os estudos da biblioteca continuam abrindo normalmente.');
+    // no code: a plain reason, not the server's text
+    expect(statusReasonText({ ...down, reasonCode: undefined }, 'fr')).toMatch(/^impossible de composer de nouvelles études/);
     expect(statusReasonText({ ...down, available: true }, 'pt')).toBeUndefined();
-    expect(errorText({ code: 'rate-limited', message: 'Rate limit.' }, 'en')).toBe('Rate limit.');
-    expect(errorText({ code: 'rate-limited', message: 'Rate limit.' }, 'es')).toMatch(/límite/);
+    expect(errorText({ code: 'rate-limited', message: 'Rate limit.' }, 'en')).toBe('Many studies are being composed right now — please try again in a minute.');
+    expect(errorText({ code: 'rate-limited', message: 'Rate limit.' }, 'es')).toMatch(/^Se están generando muchos estudios/);
+    for (const locale of ['en', 'pt', 'fr', 'es'] as const) {
+      for (const code of ['no-credentials', 'no-credit', 'loading', 'kb-error', 'rejected'] as const) {
+        expect(statusReasonText({ ...down, reasonCode: code }, locale)).not.toMatch(/Claude|Anthropic|API|\.env|npm|server/i);
+      }
+    }
   });
 });

@@ -31,7 +31,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from 'react';
 import type { ChatMessage, DashboardFocus, PassageRef, PipelineStep, SectionId, Study } from '../domain/models';
 import type { StudyRegenerator } from '../engine/InferenceStudyEngine';
-import type { EngineContext, EngineResult, EngineStreamEvent, StudyEngine } from '../engine/types';
+import type { EngineContext, EngineResult, EngineStreamEvent, LivePhase, StudyEngine } from '../engine/types';
 import { formatRef, refKey } from '../domain/reference';
 import { translator } from '../i18n/catalog';
 import type { Locale } from '../i18n/locales';
@@ -70,6 +70,8 @@ export interface SessionInternals {
   liveSteps: PipelineStep[];
   /** the open study is still being composed (sections are still arriving) */
   composing: boolean;
+  /** what the inference layer is doing for the request in flight: composing a new page, or answering a follow-up */
+  livePhase: LivePhase | null;
   /** the engine can recompose a generated page afresh */
   canRegenerate: boolean;
   /** Recompose the open generated page, bypassing the page cache. */
@@ -150,6 +152,7 @@ export function SessionProvider({ engine, children, initialSettings, deepLinks =
           if (!isCurrent() || controller.signal.aborted) return;
           streamed = true;
           if (event.type === 'progress') act({ type: 'stream/progress', step: event.step });
+          else if (event.type === 'phase') act({ type: 'stream/phase', phase: event.phase });
           else act({ type: 'stream/study', study: event.study, complete: event.complete, isPhone: isPhoneViewport() });
         };
         const ctx: EngineContext = {
@@ -383,6 +386,7 @@ export function SessionProvider({ engine, children, initialSettings, deepLinks =
       focusByMessage: state.focusByMessage,
       retryByMessage: state.retryByMessage,
       liveSteps: state.liveSteps,
+      livePhase: state.livePhase,
       composing: isComposing(state),
       canRegenerate,
       ...actions,

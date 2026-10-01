@@ -240,6 +240,9 @@ const MIN_QUOTE_WORDS = 6;
 /** Quoted runs in prose this long or longer must be verbatim (1–3-word scare quotes are fine). */
 const MIN_CHECKED_QUOTE_WORDS = 4;
 
+/** Why an item first shown by a research call in the same turn cannot be cited by that turn's composition calls. */
+const SAME_TURN = 'a call in this same turn first showed its text, after you had written this — cite it from your next turn on';
+
 /** Kinds that can state a tradition's view or be a commentary voice. */
 const STATEMENT_KINDS: ReadonlySet<EvidenceKind> = new Set(['confession', 'commentary', 'dictionary', 'study-note', 'curated', 'book-introduction']);
 
@@ -285,26 +288,31 @@ export class Validator {
     const evidence: Evidence[] = [];
     const unknown: string[] = [];
     const unread: string[] = [];
+    const sameTurn: string[] = [];
     for (const r of list) {
       const id = normalizeEvidenceId(r);
       const e = id ? this.deps.ledger.get(id) : undefined;
       if (e && this.deps.ledger.isWithheld(e.id)) unread.push(e.id);
+      else if (e && this.deps.ledger.firstShownThisTurn(e.id)) sameTurn.push(e.id);
       else if (e) {
         if (!evidence.includes(e)) evidence.push(e);
       } else unknown.push(String(r));
     }
     const warnings = [
       ...(unknown.length ? [`ignored unknown evidence ids ${unknown.join(', ')}`] : []),
-      ...(unread.length ? [`ignored ${unread.join(', ')}: you have not read ${unread.length === 1 ? 'its' : 'their'} text (it was not shown) — request it on its own before citing it`] : []),
+      ...(unread.length ? [`ignored ${unread.join(', ')}: you have not read ${unread.length === 1 ? 'its' : 'their'} text (it was not shown) — open ${unread.length === 1 ? 'it' : 'each'} with read_document (\`evidence\`: its id), then cite it in a later turn`] : []),
+      ...(sameTurn.length ? [`ignored ${sameTurn.join(', ')}: ${SAME_TURN}`] : []),
     ];
     if (evidence.length === 0 && !allowEmpty) {
       return {
         ok: false,
         reason: unread.length
-          ? `cites only evidence you have not read (${unread.join(', ')} — the text was not shown because the result was too long); request it on its own, then cite it`
-          : unknown.length
-            ? `cites no evidence from this request’s ledger (unknown ids: ${unknown.join(', ')})`
-            : 'cites no evidence — every item must cite at least one retrieved evidence id',
+          ? `cites only evidence you have not read (${unread.join(', ')} — the text was not shown because the result was too long); open it with read_document (\`evidence\`: its id), then cite it in a later turn`
+          : sameTurn.length
+            ? `cites only evidence you had not read when you wrote it (${sameTurn.join(', ')}: ${SAME_TURN})`
+            : unknown.length
+              ? `cites no evidence from this request’s ledger (unknown ids: ${unknown.join(', ')})`
+              : 'cites no evidence — every item must cite at least one retrieved evidence id',
       };
     }
     return { ok: true, evidence, warnings };
@@ -1651,7 +1659,11 @@ export class Validator {
         continue;
       }
       if (this.deps.ledger.isWithheld(e.id)) {
-        d.rejected.push({ item: label, reason: `you have not read ${e.id} (its text was not shown) — request it on its own before using it` });
+        d.rejected.push({ item: label, reason: `you have not read ${e.id} (its text was not shown) — open it with read_document (\`evidence\`: "${e.id}"), then cite it in a later turn` });
+        continue;
+      }
+      if (this.deps.ledger.firstShownThisTurn(e.id)) {
+        d.rejected.push({ item: label, reason: `you had not read ${e.id} when you wrote this: ${SAME_TURN}` });
         continue;
       }
       if (!STATEMENT_KINDS.has(e.kind)) {

@@ -353,19 +353,20 @@ describe('InferenceStudyEngine in the reader’s language', () => {
   });
 
   it.each([
-    ['pt', /^A composição ao vivo está indisponível — add ANTHROPIC_API_KEY to \.env\.local\./],
-    ['es', /^La composición en vivo no está disponible — add ANTHROPIC_API_KEY to \.env\.local\./],
-    ['fr', /^La composition en direct est indisponible — add ANTHROPIC_API_KEY to \.env\.local\./],
+    ['pt', /^Composição ao vivo: não é possível gerar novos estudos agora\./],
+    ['es', /^Composición en vivo: no es posible generar estudios nuevos ahora\./],
+    ['fr', /^Composition en direct : impossible de composer de nouvelles études pour le moment\./],
   ] as const)('%s: explains unavailability in the reader’s language', async (locale, text) => {
     const engine = new InferenceStudyEngine(fixtures, { client: fakeClient(NO_KEY) });
     const r = await engine.respond('Matthew 5–7', { study: null, history: [], conversation: {}, translation: LOCALES[locale].defaultTranslation, locale });
     expect(notes(r)[0]).toMatch(text);
+    expect(notes(r)[0]).not.toMatch(/ANTHROPIC|\.env|add /); // the server's setup details stay out of the chat
   });
 
   it('shows the static edition’s own reason in the reader’s language', async () => {
     const engine = new InferenceStudyEngine(fixtures, { client: fakeClient({ ...NO_KEY, reason: STATIC_SITE_REASON }) });
     const r = await engine.respond('Matthew 5–7', { study: null, history: [], conversation: {}, translation: 'LSG', locale: 'fr' });
-    expect(notes(r)[0]).toContain('la composition en direct fonctionne lorsque vous installez Emmaus en local');
-    expect(notes(r)[0]).not.toContain('Live composition runs');
+    expect(notes(r)[0]).toContain('dans cette édition publique, les questions ouvrent les études de la bibliothèque');
+    expect(notes(r)[0]).not.toMatch(/API|Anthropic/);
   });
 });

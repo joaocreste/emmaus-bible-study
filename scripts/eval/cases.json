@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "description": "Frozen eval set E1: 16 compose cases and 4 follow-up answers, drawn from the 2026-09-28..30 run logs. Hints are what the UI sends (InferenceStudyEngine hintFor over the real curated library, computed with the test client). Answer cases open a frozen page from fixtures/ with the chat history the UI would hold after that page was composed. Never edit a case in place: add a new id, so earlier results stay comparable.",
+  "expectedSections": {
+    "topic": ["key-passages", "original-languages", "historical-context", "theology", "commentary"],
+    "passage": ["cross-references", "original-languages", "historical-context", "literary-context", "theology", "commentary"]
+  },
+  "cases": [
+    { "id": "divorce", "flow": "compose", "query": "divorce", "locale": "en", "translation": "BSB", "hint": { "topic": "divorce" }, "kind": "topic", "tags": ["topic", "pastoral"] },
+    { "id": "anxiety", "flow": "compose", "query": "anxiety", "locale": "en", "translation": "BSB", "hint": { "topic": "anxiety" }, "kind": "topic", "tags": ["topic", "inner-experience"] },
+    { "id": "baptism", "flow": "compose", "query": "baptism", "locale": "en", "translation": "BSB", "hint": { "topic": "baptism" }, "kind": "topic", "tags": ["topic", "many-traditions"] },
+    { "id": "predestination", "flow": "compose", "query": "predestination", "locale": "en", "translation": "BSB", "hint": { "topic": "predestination" }, "kind": "topic", "tags": ["topic", "doctrinal-debate"] },
+    { "id": "death", "flow": "compose", "query": "What happens when we die?", "locale": "en", "translation": "BSB", "hint": { "topic": "what happens when we die" }, "kind": "topic", "tags": ["question"] },
+    { "id": "riches", "flow": "compose", "query": "Is it wrong to be rich?", "locale": "en", "translation": "BSB", "hint": { "topic": "is it wrong to be rich" }, "kind": "topic", "tags": ["question", "ethical"] },
+    { "id": "women-leadership", "flow": "compose", "query": "women in church leadership", "locale": "en", "translation": "BSB", "hint": { "topic": "women in church leadership" }, "kind": "topic", "tags": ["topic", "contested"] },
+    { "id": "melchizedek", "flow": "compose", "query": "Who was Melchizedek?", "locale": "en", "translation": "BSB", "hint": { "topic": "who was melchizedek" }, "kind": "topic", "tags": ["question", "person"] },
+    { "id": "genesis-1", "flow": "compose", "query": "Genesis 1", "locale": "en", "translation": "BSB", "hint": { "passage": { "book": "GEN", "startChapter": 1 } }, "kind": "passage", "tags": ["passage", "ot"] },
+    { "id": "mark-7", "flow": "compose", "query": "Mark 7:1-23", "locale": "en", "translation": "BSB", "hint": { "passage": { "book": "MRK", "startChapter": 7, "startVerse": 1, "endChapter": 7, "endVerse": 23 } }, "kind": "passage", "tags": ["passage", "nt"] },
+    { "id": "philippians-4", "flow": "compose", "query": "Philippians 4:6-7", "locale": "en", "translation": "BSB", "hint": { "passage": { "book": "PHP", "startChapter": 4, "startVerse": 6, "endChapter": 4, "endVerse": 7 } }, "kind": "passage", "tags": ["passage", "nt", "short"] },
+    { "id": "divorcio-pt", "flow": "compose", "query": "divórcio", "locale": "pt", "translation": "BLIVRE", "hint": { "topic": "divórcio" }, "kind": "topic", "tags": ["topic", "pastoral", "pt"] },
+    { "id": "ansiedad-es", "flow": "compose", "query": "¿Qué dice la Biblia sobre la ansiedad?", "locale": "es", "translation": "RVR1909", "hint": { "topic": "ansiedad" }, "kind": "topic", "tags": ["question", "es"] },
+    { "id": "genese-1-fr", "flow": "compose", "query": "Genèse 1", "locale": "fr", "translation": "LSG", "hint": { "passage": { "book": "GEN", "startChapter": 1 } }, "kind": "passage", "tags": ["passage", "ot", "fr"] },
+    { "id": "divorce-abuse", "flow": "compose", "query": "Does the bible give space for divorce on an abuse relationship?", "locale": "en", "translation": "BSB", "kind": "topic", "tags": ["question", "pastoral", "hard", "no-baseline"] },
+    { "id": "genesis-book", "flow": "compose", "query": "Genesis", "locale": "en", "translation": "BSB", "hint": { "passage": { "book": "GEN", "startChapter": 1, "endChapter": 50 } }, "kind": "passage", "tags": ["passage", "ambiguous-scope", "hard", "no-baseline"] },
+    {
+      "id": "a-remarriage",
+      "flow": "answer",
+      "question": "Does 1 Corinthians 7:15 allow remarriage?",
+      "locale": "en",
+      "translation": "BSB",
+      "study": "fixtures/divorce.json",
+      "history": [
+        { "role": "user", "text": "divorce" },
+        { "role": "assistant", "text": "This page follows divorce through Scripture: Moses' certificate in Deuteronomy 24, Malachi's charge of covenant-breaking, Jesus' appeal to creation in Matthew 19 with its exception clause, and Paul's counsel to believers married to unbelievers. Key words, first-century background, and a fair comparison of where the traditions differ over remarriage are included." }
+      ],
+      "tags": ["answer", "reference-question"]
+    },
+    {
+      "id": "a-catholic",
+      "flow": "answer",
+      "question": "What does the Catholic Church teach about divorce and remarriage?",
+      "locale": "en",
+      "translation": "BSB",
+      "study": "fixtures/divorce.json",
+      "history": [
+        { "role": "user", "text": "divorce" },
+        { "role": "assistant", "text": "This page follows divorce through Scripture: Moses' certificate in Deuteronomy 24, Malachi's charge of covenant-breaking, Jesus' appeal to creation in Matthew 19 with its exception clause, and Paul's counsel to believers married to unbelievers. Key words, first-century background, and a fair comparison of where the traditions differ over remarriage are included." }
+      ],
+      "tags": ["answer", "tradition"]
+    },
+    {
+      "id": "a-keller",
+      "flow": "answer",
+      "question": "What did Tim Keller say about divorce?",
+      "locale": "en",
+      "translation": "BSB",
+      "study": "fixtures/divorce.json",
+      "history": [
+        { "role": "user", "text": "divorce" },
+        { "role": "assistant", "text": "This page follows divorce through Scripture: Moses' certificate in Deuteronomy 24, Malachi's charge of covenant-breaking, Jesus' appeal to creation in Matthew 19 with its exception clause, and Paul's counsel to believers married to unbelievers. Key words, first-century background, and a fair comparison of where the traditions differ over remarriage are included." }
+      ],
+      "tags": ["answer", "copyrighted-author", "expect-decline", "hard"]
+    },
+    {
+      "id": "a-genese-readers-fr",
+      "flow": "answer",
+      "question": "Comment les premiers lecteurs comprenaient-ils ce récit de la création ?",
+      "locale": "fr",
+      "translation": "LSG",
+      "study": "fixtures/genese-1.json",
+      "history": [
+        { "role": "user", "text": "Genèse 1" },
+        { "role": "assistant", "text": "Voici une page d'étude sur Genèse 1 : la structure des six jours telle que la décrivent les notes Tyndale, les échos du chapitre dans le reste de la Bible, cinq mots hébreux clés, l'arrière-plan du récit et sa théologie. Les commentaires de Calvin, de Matthew Henry, de Jamieson-Fausset-Brown et de Keil et Delitzsch éclairent les versets les plus discutés, dont le « Faisons l'homme » de 1:26." }
+      ],
+      "tags": ["answer", "fr", "historical"]
+    }
+  ]
+}

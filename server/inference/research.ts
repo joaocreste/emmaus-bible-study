@@ -9,10 +9,11 @@ import { findBook, getBook } from '../../src/domain/books';
 import { formatRef, parseReference } from '../../src/domain/reference';
 import { BIBLE_VERSIONS } from '../../src/domain/translations';
 import type { EvidenceDraft, EvidenceKind } from '../../src/inference/protocol';
-import { isQuotable } from '../kb/documents';
+import { introSectionHeading, introTitle, isQuotable } from '../kb/documents';
+import { excerptAround, queryTerms } from '../kb/text';
 import { familiesOf, traditionFamily } from '../kb/traditions';
 import type { DocumentParts, KbHoldings, KnowledgeBase } from '../kb/types';
-import type { EvidenceLedger, LedgerEntry } from './ledger';
+import { normalizeEvidenceId, OPEN_CHARS, type EvidenceLedger, type LedgerEntry } from './ledger';
 import type { BetaTool } from './modelClient';
 import type { RefChecker } from './refs';
 import { strongBase } from '../../src/engine/text';
@@ -55,6 +56,14 @@ const EVIDENCE_KINDS = [
 
 const COMMENTARY_IDS = ['tyndale', 'calvin', 'matthew-henry', 'jfb', 'keil-delitzsch'] as const;
 
+/** search_knowledge results without an explicit `limit` (search hits are the least-cited results). */
+const SEARCH_LIMIT = 5;
+/** search_knowledge results without an explicit `limit` when a `tradition` filter or kinds ["confession"] is given: those results are the texts perspectives must cite, and an empty one grounds a "holds no … text" claim. */
+const SEARCH_LIMIT_TRADITION = 8;
+const TOPICS_LIMIT = 3;
+/** Strong's numbers per lexicon call. */
+const MAX_LEXICON_STRONGS = 8;
+
 /* ------------------------------------------------------------------ */
 /* Tool definitions (stable order and wording: they are part of the cached prefix) */
 /* ------------------------------------------------------------------ */
@@ -65,7 +74,7 @@ export const RESEARCH_TOOLS: BetaTool[] = [
   {
     name: 'search_knowledge',
     description:
-      'Full-text search of the knowledge base: Tyndale study notes and book introductions, Bible dictionaries and encyclopedias, Nave’s and Torrey’s topical indexes, creeds/confessions/catechisms, curated Emmaus studies and lexicon glosses (which works and traditions it holds is listed in the system prompt). Call it early for any topic or question, and with `kinds` to find a tradition’s own texts (kinds ["confession"], ["dictionary"]) before writing perspectives — with `tradition` to search one tradition’s texts at a time — or with `reference` to find notes on a passage.',
+      'Full-text search of the knowledge base: Tyndale study notes and book introductions, Bible dictionaries and encyclopedias, Nave’s and Torrey’s topical indexes, creeds/confessions/catechisms, curated Emmaus studies and lexicon glosses (which works and traditions it holds is listed in the system prompt). Call it early for any topic or question — for a subject on which churches differ, with kinds ["confession"] and kinds ["dictionary"] in that first turn too, to find each tradition’s own texts before writing perspectives; `tradition` searches one tradition’s texts at a time, `reference` finds notes on a passage.',
     eager_input_streaming: true,
     input_schema: {
       type: 'object',
@@ -74,7 +83,7 @@ export const RESEARCH_TOOLS: BetaTool[] = [
         kinds: { type: 'array', items: { type: 'string', enum: [...EVIDENCE_KINDS] }, description: 'Restrict to these evidence kinds.' },
         reference: { type: 'string', description: `Only items about passages overlapping this reference. ${REFERENCE_DESC}` },
         tradition: { type: 'string', description: 'Only texts of this church tradition, e.g. "Lutheran", "Eastern Orthodox", "Catholic", "Baptist", "Methodist" — search each tradition of a perspectives set in turn.' },
-        limit: { type: 'integer', description: 'Maximum results, 1–12 (default 8).' },
+        limit: { type: 'integer', description: `Maximum results, 1–12 (default ${SEARCH_LIMIT}; ${SEARCH_LIMIT_TRADITION} with \`tradition\` or kinds ["confession"]).` },
       },
       required: ['query'],
     },
@@ -92,7 +101,7 @@ export const RESEARCH_TOOLS: BetaTool[] = [
   },
   {
     name: 'read_passage',
-    description: `Read the verse-numbered text of one or more passages (at most 8 passages and 60 verses in one call; one call counts once against the budget). Call it for every passage you will feature, explain or quote — pass them together in \`references\`. ${REFERENCE_DESC}`,
+    description: `Read the verse-numbered text of one or more passages (at most 8 passages and 60 verses in one call; one call counts once against the budget). Call it for every passage you will feature, explain or quote — pass them together in \`references\`.`,
     eager_input_streaming: true,
     input_schema: {
       type: 'object',
@@ -119,17 +128,20 @@ export const RESEARCH_TOOLS: BetaTool[] = [
   {
     name: 'lexicon',
     description:
-      'Lexicon entries (STEPBible TBESG/TBESH) by Strong’s number ("G630", "H3748") or by English meaning ("divorce", "put away"), with occurrence counts. Call it for every word you may feature as a key word, and with the English topic word to discover the Hebrew and Greek terms.',
+      'Lexicon entries (STEPBible TBESG/TBESH) by Strong’s number ("G630", "H3748") or by English meaning ("divorce", "put away"), with occurrence counts. Call it for every word you may feature as a key word — pass their Strong’s numbers together in `strongs` — and with the English topic word to discover the Hebrew and Greek terms.',
     eager_input_streaming: true,
     input_schema: {
       type: 'object',
-      properties: { query: { type: 'string', description: 'A Strong’s number or an English word/phrase.' } },
-      required: ['query'],
+      properties: {
+        query: { type: 'string', description: 'A Strong’s number or an English word/phrase.' },
+        strongs: { type: 'array', items: { type: 'string' }, description: `Several Strong’s numbers in one call (at most ${MAX_LEXICON_STRONGS}), e.g. ["G630", "G4202", "H3748"].` },
+      },
     },
   },
   {
     name: 'word_occurrences',
-    description: 'Where a Hebrew or Greek lemma occurs (verse count and the first references). Call it to see how a key word is used elsewhere.',
+    description:
+      'Where a Hebrew or Greek lemma occurs (verse count and the first references). Call it before saying where else a key word is used: a word occurs in a verse only if its own lexicon or concordance lists it there — a noun and its cognate verb are different words.',
     eager_input_streaming: true,
     input_schema: {
       type: 'object',
@@ -151,7 +163,7 @@ export const RESEARCH_TOOLS: BetaTool[] = [
   {
     name: 'commentary',
     description:
-      'Tyndale Open Study Notes plus public-domain commentary (Calvin, Matthew Henry and continuators, Jamieson-Fausset-Brown, Keil & Delitzsch) on a passage. Call it on the central passages; its texts are the voices for the commentary section.',
+      'Tyndale Open Study Notes plus public-domain commentary (Calvin, Matthew Henry and continuators, Jamieson-Fausset-Brown, Keil & Delitzsch) on a passage. Call it on the crux verses, one verse at a time (e.g. "Matthew 19:9"): a long range returns only its opening sections. Its texts are the voices for the commentary section.',
     eager_input_streaming: true,
     input_schema: {
       type: 'object',
@@ -169,7 +181,8 @@ export const RESEARCH_TOOLS: BetaTool[] = [
   },
   {
     name: 'book_introduction',
-    description: 'The Tyndale introduction to a book of the Bible (author, date, setting, purpose, structure), split into sections. Call it for passage studies and for historical or literary context.',
+    description:
+      'The Tyndale introduction to a book of the Bible: its sections on author, date, setting and purpose, and a list of the other sections (structure, message…), which read_document opens. Call it for passage studies and for historical or literary context.',
     eager_input_streaming: true,
     input_schema: {
       type: 'object',
@@ -180,16 +193,16 @@ export const RESEARCH_TOOLS: BetaTool[] = [
   {
     name: 'read_document',
     description:
-      'Open other parts of a long text the knowledge base holds in parts — an encyclopedia article, a sermon, a long dictionary entry (a search result’s header ends “(part 4)” and the result says how many parts it has). Give the title as the header shows it, without the part number, and either `parts` (at most 4 part numbers) or `query` (the parts that best match those words); every call also lists each part’s opening words. Use it to read the part of an article on the exact disputed point (e.g. how a tradition reads the other side’s key text).',
+      'Open other parts of a long text the knowledge base holds in parts — an encyclopedia article, a sermon, a long dictionary entry, a book introduction (a search result’s header ends “(part 4)” and the result says how many parts it has). Give the title as the header shows it, without the part number, and either `parts` (at most 4 part numbers) or `query` (the parts that best match those words); every call also lists each part. Use it to read the part on the exact disputed point (e.g. how a tradition reads the other side’s key text) rather than reasoning from the part a search returned. With `evidence` instead, it opens the whole text of an item already shown (an excerpt cut “[…]”), so you can read it before quoting or summarising it.',
     eager_input_streaming: true,
     input_schema: {
       type: 'object',
       properties: {
         title: { type: 'string', description: 'The text’s title, e.g. "The Catholic Encyclopedia (1907–1914) — Divorce (in Moral Theology), 1909".' },
         parts: { type: 'array', items: { type: 'integer' }, description: 'Part numbers to open, at most 4.' },
-        query: { type: 'string', description: 'Words to find the matching parts by, e.g. "Pauline privilege 1 Corinthians 7:15".' },
+        query: { type: 'string', description: 'Words to find the matching parts by, e.g. "Pauline privilege 1 Corinthians 7:15" (with `evidence`: the passage of a very long text to show).' },
+        evidence: { type: 'string', description: `An evidence id already shown, e.g. "E12": its whole text (at most ${OPEN_CHARS.toLocaleString('en-US')} characters).` },
       },
-      required: ['title'],
     },
   },
 ];
@@ -218,12 +231,16 @@ const INPUTS = {
   original_text: z
     .object({ reference: text.optional(), references: z.array(text).min(1).max(MAX_PASSAGES).optional() })
     .refine((x) => Boolean(x.reference || x.references?.length), { message: 'give `references` (a list) or `reference`', path: ['references'] }),
-  lexicon: z.object({ query: text }),
+  lexicon: z
+    .object({ query: text.optional(), strongs: z.array(text).min(1).max(MAX_LEXICON_STRONGS).optional() })
+    .refine((x) => Boolean(x.query || x.strongs?.length), { message: 'give `query` or `strongs` (a list of Strong’s numbers)', path: ['query'] }),
   word_occurrences: z.object({ strong: text }),
   cross_references: z.object({ reference: text }),
   commentary: z.object({ reference: text, sources: z.array(z.enum(COMMENTARY_IDS)).max(5).optional(), query: text.optional() }),
   book_introduction: z.object({ book: text }),
-  read_document: z.object({ title: text, parts: z.array(z.number().int().min(1).max(500)).max(4).optional(), query: text.optional() }),
+  read_document: z
+    .object({ title: text.optional(), evidence: text.optional(), parts: z.array(z.number().int().min(1).max(500)).max(4).optional(), query: text.optional() })
+    .refine((x) => Boolean(x.title || x.evidence), { message: 'give the `title` of a text held in parts, or the `evidence` id of an item already shown', path: ['title'] }),
 } satisfies Record<ResearchToolName, z.ZodType>;
 
 /* ------------------------------------------------------------------ */
@@ -334,16 +351,16 @@ export async function prepareResearchCall(name: ResearchToolName, rawInput: unkn
       return {
         ok: true,
         call: {
-          step: { stage: 'Search', detail: `Searching ${label ? `${label} texts in ` : ''}${where} for “${input.query}”${within ? ` on ${formatRef(within)}` : ''}`, provider: 'kb:search' },
+          step: { stage: 'Search', detail: `Searching ${label ? `${label} texts in ` : ''}${where} for “${input.query}”${within ? ` on ${formatRef(within)}` : ''}`, provider: 'kb:search', reader: { kind: 'search' } },
           fetch: () => {
             for (const f of traditions) ctx.ledger.searchedTraditions.add(f);
-            return kb.search(input.query, { kinds: input.kinds, limit: input.limit ?? 8, ...(within ? { within } : {}), ...(traditions.length ? { traditions } : {}) });
+            return kb.search(input.query, { kinds: input.kinds, limit: input.limit ?? (traditions.length || input.kinds?.includes('confession') ? SEARCH_LIMIT_TRADITION : SEARCH_LIMIT), ...(within ? { within } : {}), ...(traditions.length ? { traditions } : {}) });
           },
           empty: traditions.length
             ? `No ${label} texts${input.kinds?.length ? ` in ${input.kinds.join(', ')}` : ''} match “${input.query}”${within ? ` on ${formatRef(within)}` : ''} — try the older words those texts use, or say plainly that the knowledge base holds no ${label} text on this question.`
             : emptySearchMessage(input.query, input.kinds, within, holdings),
           ...(note ? { note } : {}),
-          after: (drafts) => [morePartsNote(kb, drafts), traditions.length ? null : otherTraditionsNote(kb, input.kinds, drafts, holdings)].filter(Boolean).join('\n') || null,
+          after: (drafts) => [morePartsNote(kb, drafts), excerptsNote(drafts, ctx.ledger), traditions.length ? null : otherTraditionsNote(kb, input.kinds, drafts, holdings)].filter(Boolean).join('\n') || null,
         },
       };
     }
@@ -352,8 +369,8 @@ export async function prepareResearchCall(name: ResearchToolName, rawInput: unkn
       return {
         ok: true,
         call: {
-          step: { stage: 'Topics', detail: `Looking up “${input.query}” in Nave’s Topical Bible and Torrey’s`, provider: 'kb:topics' },
-          fetch: () => kb.topics(input.query, 6),
+          step: { stage: 'Topics', detail: `Looking up “${input.query}” in Nave’s Topical Bible and Torrey’s`, provider: 'kb:topics', reader: { kind: 'topics' } },
+          fetch: () => kb.topics(input.query, TOPICS_LIMIT),
           empty: `No topical-index entry for “${input.query}”. Try a related word (e.g. a synonym or the broader subject).`,
         },
       };
@@ -371,7 +388,7 @@ export async function prepareResearchCall(name: ResearchToolName, rawInput: unkn
       return {
         ok: true,
         call: {
-          step: { stage: 'Scripture', detail: `Reading ${names} (${translation})`, provider: providerId(p.scripture, 'local:scripture') },
+          step: { stage: 'Scripture', detail: `Reading ${names} (${translation})`, provider: providerId(p.scripture, 'local:scripture'), reader: { kind: 'scripture', refs: list.refs } },
           fetch: async () => {
             const drafts = await Promise.all(list.refs.map((r) => kb.passage(r, translation)));
             return drafts.filter((d): d is EvidenceDraft => d != null);
@@ -391,7 +408,7 @@ export async function prepareResearchCall(name: ResearchToolName, rawInput: unkn
       return {
         ok: true,
         call: {
-          step: { stage: 'Original text', detail: `Reading the ${[...langs].join(' and ')} text of ${names}`, provider: providerId(p.originalText, 'local:original-text') },
+          step: { stage: 'Original text', detail: `Reading the ${[...langs].join(' and ')} text of ${names}`, provider: providerId(p.originalText, 'local:original-text'), reader: { kind: 'original', refs: list.refs } },
           fetch: async () => {
             const drafts = await Promise.all(list.refs.map((r) => kb.originalText(r)));
             return drafts.filter((d): d is EvidenceDraft => d != null);
@@ -402,34 +419,44 @@ export async function prepareResearchCall(name: ResearchToolName, rawInput: unkn
     }
     case 'lexicon': {
       const input = parsed.data as z.infer<(typeof INPUTS)['lexicon']>;
-      const isStrong = /^[GH]\s*0*\d{1,5}[A-Z]?$/i.test(input.query.trim());
-      const query = isStrong ? strongBase(input.query) : input.query;
+      const notStrong = (input.strongs ?? []).find((x) => !STRONG_RE.test(x.trim()));
+      if (notStrong) return { ok: false, error: `“${notStrong}” in \`strongs\` is not a Strong’s number (e.g. "G630", "H3748"); look an English word up with \`query\`.` };
+      const isStrong = (q: string) => STRONG_RE.test(q.trim());
+      // the entries asked for, each Strong's number once
+      const queries = [...new Set([...(input.query ? [input.query] : []), ...(input.strongs ?? [])].map((q) => (isStrong(q) ? strongBase(q) : q)))];
+      const names = queries.map((q) => (isStrong(q) ? q : `“${q}”`)).join(', ');
       return {
         ok: true,
         call: {
           step: {
             stage: 'Lexicon',
-            detail: isStrong ? `Looking up ${query} in the lexicon` : `Looking up “${query}” in the Hebrew and Greek lexicons`,
+            detail: queries.every(isStrong) ? `Looking up ${names} in the lexicon` : `Looking up ${names} in the Hebrew and Greek lexicons`,
             provider: providerId(p.lexicon, 'local:lexicon'),
+            reader: { kind: 'words' },
           },
           fetch: async () => {
-            const drafts = await kb.lexicon(query, 6);
-            // a rare word: the verses it occurs in, so what they say can be cited rather than recalled
-            const verses = isStrong && drafts.length ? await occurrenceVerses(kb, query, ctx.translation, RARE_LEXICON_VERSES) : null;
-            return verses ? [...drafts, verses] : drafts;
+            const found = await Promise.all(
+              queries.map(async (query) => {
+                const drafts = await kb.lexicon(query, 6);
+                // a rare word: the verses it occurs in, so what they say can be cited rather than recalled
+                const verses = isStrong(query) && drafts.length ? await occurrenceVerses(kb, query, ctx.translation, RARE_LEXICON_VERSES) : null;
+                return verses ? [...drafts, verses] : drafts;
+              }),
+            );
+            return found.flat();
           },
-          empty: `No lexicon entry for “${query}”.`,
+          empty: `No lexicon entry for ${names}.`,
         },
       };
     }
     case 'word_occurrences': {
       const input = parsed.data as z.infer<(typeof INPUTS)['word_occurrences']>;
-      if (!/^[GH]\s*0*\d{1,5}[A-Z]?$/i.test(input.strong.trim())) return { ok: false, error: `“${input.strong}” is not a Strong’s number (e.g. "G630", "H3748").` };
+      if (!STRONG_RE.test(input.strong.trim())) return { ok: false, error: `“${input.strong}” is not a Strong’s number (e.g. "G630", "H3748").` };
       const strong = strongBase(input.strong);
       return {
         ok: true,
         call: {
-          step: { stage: 'Lexicon', detail: `Finding where ${strong} occurs`, provider: providerId(p.lexicon, 'local:lexicon') },
+          step: { stage: 'Lexicon', detail: `Finding where ${strong} occurs`, provider: providerId(p.lexicon, 'local:lexicon'), reader: { kind: 'words' } },
           fetch: async () => {
             const d = await kb.occurrences(strong, 40);
             if (!d) return [];
@@ -447,7 +474,7 @@ export async function prepareResearchCall(name: ResearchToolName, rawInput: unkn
       return {
         ok: true,
         call: {
-          step: { stage: 'Cross-references', detail: `Finding cross-references for ${formatRef(r.ref)}`, provider: providerId(p.crossReferences, 'local:xrefs') },
+          step: { stage: 'Cross-references', detail: `Finding cross-references for ${formatRef(r.ref)}`, provider: providerId(p.crossReferences, 'local:xrefs'), reader: { kind: 'cross-references', refs: [r.ref] } },
           fetch: () => kb.crossReferences(r.ref, 20),
           empty: `No cross-references are recorded for ${formatRef(r.ref)}.`,
         },
@@ -461,7 +488,7 @@ export async function prepareResearchCall(name: ResearchToolName, rawInput: unkn
       return {
         ok: true,
         call: {
-          step: { stage: 'Commentary', detail: `Reading ${who} on ${formatRef(r.ref)}`, provider: providerId(p.commentary, 'local:commentary') },
+          step: { stage: 'Commentary', detail: `Reading ${who} on ${formatRef(r.ref)}`, provider: providerId(p.commentary, 'local:commentary'), reader: { kind: 'commentary', refs: [r.ref] } },
           fetch: () => kb.commentary(r.ref, input.sources, input.query),
           empty: `No commentary is available on ${formatRef(r.ref)}${input.sources?.length ? ` from ${input.sources.join(', ')}` : ''}.`,
           after: (drafts) => excerptedCommentaryNote(drafts, input.query),
@@ -472,30 +499,37 @@ export async function prepareResearchCall(name: ResearchToolName, rawInput: unkn
       const input = parsed.data as z.infer<(typeof INPUTS)['book_introduction']>;
       const book = findBook(input.book) ?? (parseReference(input.book) ? getBook(parseReference(input.book)!.book) : undefined);
       if (!book) return { ok: false, error: `Unknown book “${input.book}”.` };
+      let sections: EvidenceDraft[] = [];
       return {
         ok: true,
         call: {
-          step: { stage: 'Introduction', detail: `Reading Tyndale’s introduction to ${book.name}`, provider: providerId(p.historicalContext, 'local:intros') },
-          fetch: () => kb.bookIntroduction(book.id),
+          step: { stage: 'Introduction', detail: `Reading Tyndale’s introduction to ${book.name}`, provider: providerId(p.historicalContext, 'local:intros'), reader: { kind: 'introduction', book: book.id } },
+          fetch: async () => {
+            sections = await kb.bookIntroduction(book.id);
+            return keyIntroSections(sections);
+          },
           empty: `No introduction is available for ${book.name}.`,
+          after: (shown) => otherSectionsNote(sections, shown, introTitle(book.id)),
         },
       };
     }
     case 'read_document': {
       const input = parsed.data as z.infer<(typeof INPUTS)['read_document']>;
+      if (input.evidence) return openEvidence(input.evidence, input.query, ctx.ledger);
+      const title = input.title!;
       if (!kb.documentParts) return { ok: false, error: 'This knowledge base cannot open texts by part.' };
       let result: DocumentParts | null = null;
       const asked = input.parts?.length ? `part${input.parts.length === 1 ? '' : 's'} ${input.parts.join(', ')} of ` : '';
       return {
         ok: true,
         call: {
-          step: { stage: 'Search', detail: `Opening ${asked}“${clip(input.title, 80)}”`, provider: 'kb:document' },
+          step: { stage: 'Search', detail: `Opening ${asked}“${clip(title, 80)}”`, provider: 'kb:document', reader: { kind: 'sources' } },
           fetch: async () => {
-            result = await kb.documentParts!(input.title, { ...(input.parts?.length ? { parts: input.parts } : {}), ...(input.query ? { query: input.query } : {}) });
+            result = await kb.documentParts!(title, { ...(input.parts?.length ? { parts: input.parts } : {}), ...(input.query ? { query: input.query } : {}) });
             return result.found ? result.drafts : [];
           },
-          empty: `Nothing opened from “${input.title}”.`,
-          after: () => documentNote(result, input.title),
+          empty: `Nothing opened from “${title}”.`,
+          after: () => documentNote(result, title),
         },
       };
     }
@@ -512,6 +546,55 @@ function documentNote(r: DocumentParts | null, asked: string): string | null {
   }
   const missing = r.unknownParts.length ? `It has no part ${r.unknownParts.join(', ')}. ` : '';
   return `${missing}“${r.title}” has ${r.total} parts:\n${r.contents.join('\n')}`;
+}
+
+/** Book-introduction sections book_introduction shows: the summary, the overview and those on author, date, setting and purpose. */
+const KEY_INTRO_SECTION = /^(?:at a glance|overview)\b|\b(?:author|date|setting|purpose|occasion|recipients|recpients|audience|readers|destination|historical situation)/i;
+
+/** The sections of a book's introduction to show (the others are listed by otherSectionsNote); its first three when none is on those points. */
+export function keyIntroSections(sections: readonly EvidenceDraft[]): EvidenceDraft[] {
+  const key = sections.filter((d) => KEY_INTRO_SECTION.test(introSectionHeading(d.title)));
+  return key.length ? key : sections.slice(0, 3);
+}
+
+/** After book_introduction: the sections not shown, which read_document opens by the introduction's title and their part numbers. */
+export function otherSectionsNote(sections: readonly EvidenceDraft[], shown: readonly EvidenceDraft[], title: string): string | null {
+  const rest = sections.map((d, i) => ({ d, part: i + 1 })).filter(({ d }) => !shown.includes(d));
+  if (!rest.length) return null;
+  return `Other sections of this introduction — open them with read_document (title “${title}” and \`parts\`): ${rest.map(({ d, part }) => `part ${part}: ${introSectionHeading(d.title)}`).join('; ')}.`;
+}
+
+/** read_document with `evidence`: the whole text of an item already shown, so an excerpt is read in full before it is quoted or summarised. */
+function openEvidence(raw: string, query: string | undefined, ledger: EvidenceLedger): PrepareResult {
+  const id = normalizeEvidenceId(raw);
+  const e = id ? ledger.get(id) : undefined;
+  if (!e) return { ok: false, error: `“${raw}” is not the id of an item shown in this request (ids look like "E12").` };
+  const terms = new Set(query ? queryTerms(query) : []);
+  return {
+    ok: true,
+    call: {
+      step: { stage: 'Search', detail: `Opening “${clip(e.title, 80)}” in full`, provider: 'kb:document', reader: { kind: 'sources' } },
+      fetch: async () => [],
+      empty: `Nothing to open for ${e.id}.`,
+      after: () => {
+        const r = ledger.renderWhole(e.id, OPEN_CHARS, (full, max) => excerptAround(full, terms, max).text);
+        if (!r) return null;
+        if (!r.block) return `${e.id} was already shown whole above; it has no more text.`;
+        const lead =
+          r.length > OPEN_CHARS
+            ? `${e.id} is ${r.length.toLocaleString('en-US')} characters long; shown: ${terms.size ? `its passages on “${query}”` : 'its opening'} (cuts marked “[…]”) — call again with other \`query\` words for another passage.`
+            : `The whole text of ${e.id}:`;
+        return `${lead}\n\n${r.block}`;
+      },
+    },
+  };
+}
+
+/** The first search hits cut to an excerpt (“[…]”) in a request: say that read_document opens one whole by its id. */
+function excerptsNote(drafts: readonly EvidenceDraft[], ledger: EvidenceLedger): string | null {
+  if (ledger.notesGiven.has('excerpts') || !drafts.some((d) => d.text.includes('[…]'))) return null;
+  ledger.notesGiven.add('excerpts');
+  return 'Hits cut “[…]” are excerpts: read_document with `evidence` (the id) opens one whole before you quote it or say what the rest holds.';
 }
 
 function clip(s: string, n: number): string {
@@ -534,6 +617,8 @@ function morePartsNote(kb: KnowledgeBase, drafts: readonly EvidenceDraft[]): str
   }
   return lines.length ? `Longer texts in these results — open another part with read_document (title, and parts or query): ${lines.join('; ')}.` : null;
 }
+
+const STRONG_RE = /^[GH]\s*0*\d{1,5}[A-Z]?$/i;
 
 /** A lemma this rare comes with the text of every verse it occurs in (lexicon lookup by Strong's number / word_occurrences). */
 const RARE_LEXICON_VERSES = 6;
@@ -618,7 +703,7 @@ export function excerptedCommentaryNote(drafts: readonly EvidenceDraft[], query:
   const cut = drafts.filter((d) => (d.kind === 'commentary' || d.kind === 'study-note') && /\[…\]\s*$/.test(d.text));
   if (!cut.length) return null;
   const names = [...new Set(cut.map((d) => d.title))].slice(0, 3).join('; ');
-  return `Excerpts only (the section continues past “[…]”): ${names}. Before saying what ${cut.length === 1 ? 'this author concludes' : 'these authors conclude'} on a disputed point, call commentary again on the same reference with \`query\` naming that point${query ? ' (different words than before)' : ''} — never infer the rest of a section.`;
+  return `Excerpts only (the section continues past “[…]”): ${names}. Before saying what ${cut.length === 1 ? 'this author concludes' : 'these authors conclude'} on a disputed point, call commentary again on the same reference with \`query\` naming that point${query ? ' (different words than before)' : ''}, or open the section whole with read_document (\`evidence\`: its id) — never infer the rest of a section.`;
 }
 
 function safeSync<T>(fn: () => T): T | undefined {

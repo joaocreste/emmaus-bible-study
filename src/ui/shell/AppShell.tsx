@@ -3,6 +3,7 @@ import { useT } from '../../i18n/I18nProvider';
 import { cx } from '../../lib/cx';
 import { useSession } from '../../state/session';
 import { Welcome } from '../welcome/Welcome';
+import { ComposeCard } from './ComposeCard';
 import styles from './AppShell.module.css';
 import { ChatPanel, PaneLoading, preloadStudyPanes, SourcesPanel, StudyWorkspace, whenIdle } from './lazyPanes';
 import { MobileTabBar } from './MobileTabBar';
@@ -121,6 +122,7 @@ export function AppShell({ onOpenSearch }: AppShellProps) {
       )}
 
       {inStudy && isPhone && <MobileTabBar />}
+      <ComposeCard />
     </div>
   );
 }

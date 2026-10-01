@@ -18,6 +18,7 @@ import {
   authError,
   createFakeKb,
   fail,
+  fallbackBlock,
   FakeModelClient,
   hang,
   message,
@@ -67,7 +68,7 @@ const researchTurn2 = reply([
 ]);
 // E7 Matt 19:3–9 · E8 Deut 24:1–4 · E9 Tyndale · E10 Calvin · E11 JFB · E12 Greek text · E13 WCF · E14 Trent · E15–E17 the other passages
 
-const composeTurn = reply([
+const composeBlocks = [
   toolUse('begin_page', {
     title: 'Divorce in the Bible',
     kind: 'topic',
@@ -137,7 +138,8 @@ const composeTurn = reply([
       { evidence: 'E9', mode: 'summary', summary: 'Tyndale describes the two schools.' },
     ],
   }),
-]);
+];
+const composeTurn = reply(composeBlocks);
 
 const finishTurn = reply([
   toolUse('finish_page', {
@@ -467,8 +469,7 @@ describe('compose — budgets', () => {
 });
 
 function composeTurnWithout(section: string) {
-  const turn = composeTurn({} as never, { index: 0 }) as ReturnType<typeof message>;
-  return turn.content.filter((b) => !(b.type === 'tool_use' && (b.input as { section?: string }).section === section));
+  return composeBlocks.filter((b) => !(b.type === 'tool_use' && (b.input as { section?: string }).section === section));
 }
 
 /* ------------------------------------------------------------------ */
@@ -572,6 +573,77 @@ describe('answer', () => {
     expect(r.focus?.section).toBe('theology');
   });
 
+  it('a reply sent with an add_section that loses items is refused (it was written before the answer saw what landed); reply alone next turn is accepted', async () => {
+    const study = await composedStudy();
+    const word = { strong: 'G647', english: 'certificate of divorce', anchor: { reference: 'Matthew 19:7', phrase: 'certificate of divorce' }, significance: 'The Greek term for the bill of divorce Moses required.', evidence: ['E1'] };
+    const answer = { text: 'Matthew 19:7 uses apostasion, the bill of divorce of Deuteronomy 24:1.', evidence: ['E1'], focus: { section: 'original-languages', verses: ['Matthew 19:7'] } };
+    const client = new FakeModelClient([
+      reply([toolUse('lexicon', { query: 'G647' })]),
+      reply([toolUse('add_section', { section: 'original-languages', items: [word, { ...word, strong: 'G4202', evidence: [] }] }), toolUse('reply', answer)]),
+      reply([toolUse('reply', answer)]),
+    ]);
+    const req: AnswerRequest = { question: 'What is the Greek word for the certificate?', study, history: [], conversation: {}, translation: 'BSB' };
+    const events = await collect((emit) => runAnswer(req, deps(client), emit, new AbortController().signal));
+    expect(errorOf(events)).toBeNull();
+    expect(client.calls).toBe(3);
+    const [added, refused] = Array.from(toolResults(client.requests[2]).values());
+    expect(added.content).toMatch(/^Accepted 1 item in original-languages; rejected 1/);
+    expect(refused).toMatchObject({ isError: true, content: expect.stringMatching(/^Error: reply was not accepted: an add_section earlier in this turn was rejected/) });
+    const r = events.find((e) => e.type === 'reply');
+    expect(r?.type === 'reply' && r.reply.text).toMatch(/apostasion/);
+  });
+
+  it('an answer turn re-issued after its add_section ran: the items sent again are skipped and counted once', async () => {
+    const study = await composedStudy();
+    const item = {
+      category: 'jewish-tradition',
+      title: 'Two schools on divorce',
+      summary: 'Tyndale’s note describes two groups of Pharisees: Shammai allowed divorce only for grave sin, Hillel for any reason.',
+      relatedVerses: ['Matthew 19:3'],
+      evidence: ['E1'],
+    };
+    const answer = { text: 'Two schools of Pharisees disagreed on the grounds for divorce (Matthew 19:3).', evidence: ['E1'], focus: { section: 'historical-context', verses: ['Matthew 19:3'] } };
+    const partway: ScriptedTurn = async (_p, { stream }) => {
+      await stream(toolUse('add_section', { section: 'historical-context', items: [item] }));
+      throw overloadedError();
+    };
+    const client = new FakeModelClient([
+      reply([toolUse('commentary', { reference: 'Matthew 19:3' })]),
+      partway,
+      reply([toolUse('add_section', { section: 'historical-context', items: [item] }), toolUse('reply', answer)]),
+    ]);
+    const req: AnswerRequest = { question: 'Why did the Pharisees ask about divorce?', study, history: [], conversation: {}, translation: 'BSB' };
+    const events = await collect((emit) => runAnswer(req, deps(client, { retryDelaysMs: [0, 0] }), emit, new AbortController().signal));
+    expect(errorOf(events)).toBeNull();
+    expect(client.calls).toBe(3);
+    const snap = events.filter((e) => e.type === 'study').at(-1);
+    if (snap?.type !== 'study') throw new Error('no snapshot');
+    const added = snap.study.context.filter((c) => c.title === item.title);
+    expect(added).toHaveLength(1);
+    const r = events.find((e) => e.type === 'reply');
+    if (r?.type !== 'reply') throw new Error('no reply');
+    expect(r.focus).toMatchObject({ expandIds: [added[0].id], pinIds: [added[0].id] });
+    expect(r.reply.updates?.[0]).toMatchObject({ section: 'historical-context', label: expect.stringMatching(/\b1\b/) });
+  });
+
+  it('a refused answer takes back the page extension it had streamed: the reader is sent the page as it was', async () => {
+    const study = await composedStudy();
+    const word = { strong: 'G647', english: 'certificate of divorce', anchor: { reference: 'Matthew 19:7', phrase: 'certificate of divorce' }, significance: 'The Greek term for the bill of divorce Moses required.', evidence: ['E1'] };
+    const client = new FakeModelClient([
+      reply([toolUse('lexicon', { query: 'G647' })]),
+      reply([toolUse('add_section', { section: 'original-languages', items: [word] }), toolUse('reply', { text: 'Matthew 19:7 uses apostasion.', evidence: ['E1'] })], 'refusal'),
+    ]);
+    const req: AnswerRequest = { question: 'What is the Greek word for the certificate?', study, history: [], conversation: {}, translation: 'BSB' };
+    const events = await collect((emit) => runAnswer(req, deps(client), emit, new AbortController().signal));
+    expect(errorOf(events)?.code).toBe('refusal');
+    const pages = events.flatMap((e) => (e.type === 'study' ? [e.study] : []));
+    expect(pages.map((p) => p.keyWords.map((k) => k.strong))).toEqual([
+      ['G630', 'H3748', 'G4202', 'G647'],
+      ['G630', 'H3748', 'G4202'],
+    ]);
+    expect(pages[1].keyWords).toEqual(study.keyWords);
+  });
+
   it('begin_page is refused in the answer flow; no reply → invalid-output', async () => {
     const study = await composedStudy();
     const client = new FakeModelClient([
@@ -584,5 +656,327 @@ describe('answer', () => {
     const events = await collect((emit) => runAnswer(req, deps(client), emit, new AbortController().signal));
     expect(Array.from(toolResults(client.requests[1]).values())[0].content).toMatch(/not available for follow-up answers/);
     expect(errorOf(events)?.code).toBe('invalid-output');
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Composition calls run as their blocks stream                        */
+/* ------------------------------------------------------------------ */
+
+describe('compose — calls run as their blocks stream', () => {
+  const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+  const snapshots = (events: InferenceEvent[]) => events.flatMap((e) => (e.type === 'study' ? [e] : []));
+  const decided = (log: RunLog) => log.decisions.map((d) => d.section ?? d.tool);
+  const [beginPage, keyPassages, keyWords, background] = composeBlocks;
+
+  /** Streams `blocks` one by one, then waits (at most `ms`) for `until` before the turn ends; `ended` gets the event count at that moment. */
+  function streamed(blocks: typeof composeBlocks, until: Promise<void>, ended: { at: number }, events: InferenceEvent[]): ScriptedTurn {
+    return async (_params, { stream }) => {
+      for (const b of blocks) await stream(b);
+      await Promise.race([until, sleep(2000)]);
+      ended.at = events.length;
+      return message(blocks);
+    };
+  }
+
+  it('the page shell and each section appear before the turn ends; the results go back one per call, in block order', async () => {
+    const events: InferenceEvent[] = [];
+    const ended = { at: -1 };
+    let allShown!: () => void;
+    const shown = new Promise<void>((resolve) => (allShown = resolve));
+    const client = new FakeModelClient([researchTurn1, researchTurn2, streamed(composeBlocks, shown, ended, events), finishTurn]);
+    const logs: RunLog[] = [];
+    await runCompose(DIVORCE, deps(client, { writeLog: async (l) => (logs.push(l), null) }), (e) => {
+      events.push(e);
+      if (snapshots(events).length === composeBlocks.length) allShown();
+    }, new AbortController().signal);
+
+    expect(errorOf(events)).toBeNull();
+    // begin_page + five sections, every one shown while the turn was still streaming
+    const partial = events.flatMap((e, i) => (e.type === 'study' && !e.complete ? [i] : []));
+    expect(partial).toHaveLength(6);
+    expect(Math.max(...partial)).toBeLessThan(ended.at);
+
+    // exactly one tool_result per tool_use, in block order; the turn summary on the last one
+    const sent = client.requests[3].messages.at(-1)!;
+    const blocks = typeof sent.content === 'string' ? [] : sent.content;
+    expect(blocks.map((b) => (b.type === 'tool_result' ? b.tool_use_id : b.type))).toEqual(composeBlocks.map((b) => (b as { id: string }).id));
+    const results = Array.from(toolResults(client.requests[3]).values()).map((r) => r.content);
+    expect(results[0]).toMatch(/^Page started: “Divorce in the Bible”/);
+    expect(results[1]).toMatch(/^Accepted 5 items in key-passages; rejected 2/);
+    expect(results[5]).toMatch(/in commentary[\s\S]*Page so far: Where Scripture speaks of divorce — 5 passages;[\s\S]*If a rejected item matters/);
+
+    // the same page, results and log as when every call runs after the turn
+    const plain = new FakeModelClient(DIVORCE_SCRIPT, { streaming: false });
+    const plainLogs: RunLog[] = [];
+    const plainEvents = await collect((emit) => runCompose(DIVORCE, deps(plain, { writeLog: async (l) => (plainLogs.push(l), null) }), emit, new AbortController().signal));
+    const page = (evs: InferenceEvent[]) => {
+      const study = snapshots(evs).at(-1)!.study;
+      return { ...study, generation: { ...study.generation, createdAt: 0 } };
+    };
+    expect(page(events)).toEqual(page(plainEvents));
+    expect(JSON.stringify(client.requests[3].messages)).toBe(JSON.stringify(plain.requests[3].messages));
+    expect(decided(logs[0])).toEqual(decided(plainLogs[0]));
+    expect(logs[0].toolCalls.map((t) => [t.turn, t.name, t.isError])).toEqual(plainLogs[0].toolCalls.map((t) => [t.turn, t.name, t.isError]));
+  });
+
+  it('in a turn that mixes in research, only the leading composition calls run early; the rest run after the turn, in block order', async () => {
+    const events: InferenceEvent[] = [];
+    const ended = { at: -1 };
+    const theology = composeBlocks[4];
+    const search = toolUse('search_knowledge', { query: 'divorce remarriage adultery', kinds: ['confession'] });
+    const turn = [beginPage, background, search, theology];
+    let twoShown!: () => void;
+    const shown = new Promise<void>((resolve) => (twoShown = resolve));
+    const client = new FakeModelClient([researchTurn1, researchTurn2, streamed(turn, shown, ended, events), finishTurn]);
+    const logs: RunLog[] = [];
+    await runCompose(DIVORCE, deps(client, { writeLog: async (l) => (logs.push(l), null) }), (e) => {
+      events.push(e);
+      if (snapshots(events).length === 2) setTimeout(twoShown, 50); // time for a third, which must not come
+    }, new AbortController().signal);
+
+    const partial = events.flatMap((e, i) => (e.type === 'study' && !e.complete ? [i] : []));
+    expect(partial).toHaveLength(3);
+    expect(partial.filter((i) => i < ended.at)).toHaveLength(2); // begin_page + historical-context before the turn ended; theology after
+    const results = toolResults(client.requests[3]);
+    expect(Array.from(results.keys())).toEqual(turn.map((b) => (b as { id: string }).id));
+    expect(Array.from(results.values()).map((r) => r.content.split('\n')[0])).toEqual([
+      expect.stringMatching(/^Page started/),
+      expect.stringMatching(/^Accepted 1 item in historical-context/),
+      expect.stringMatching(/E13, E14/),
+      expect.stringMatching(/^Accepted \d+ items? in theology/),
+    ]);
+    expect(logs[0].toolCalls.filter((t) => t.turn === 3).map((t) => t.name)).toEqual(['begin_page', 'add_section', 'search_knowledge', 'add_section']);
+  });
+
+  it('a turn that fails after some calls ran is sent again: the page keeps them, the model is told, and re-sent sections do not duplicate', async () => {
+    const failing: ScriptedTurn = async (_params, { stream }) => {
+      for (const b of [beginPage, keyPassages, keyWords]) await stream(b);
+      throw overloadedError();
+    };
+    // the retry sends key-passages again (appending: items already on the page are skipped) and every other section
+    const again = composeBlocks.map((b) => {
+      const t = b as { id: string; name: string; input: Record<string, unknown> };
+      return toolUse(t.name, t.input.section === 'key-passages' ? { ...t.input, mode: 'append' } : t.input, `${t.id}-again`);
+    });
+    const client = new FakeModelClient([researchTurn1, researchTurn2, failing, reply(again), finishTurn]);
+    const logs: RunLog[] = [];
+    const events = await collect((emit) => runCompose(DIVORCE, deps(client, { retryDelaysMs: [0, 0], writeLog: async (l) => (logs.push(l), null) }), emit, new AbortController().signal));
+
+    expect(errorOf(events)).toBeNull();
+    expect(client.calls).toBe(5);
+    // the shell and two sections were shown before the failure
+    expect(snapshots(events).slice(0, 3).map((s) => s.study.layout?.sections.map((x) => x.id))).toEqual([
+      ['scripture', 'sources'],
+      ['key-passages', 'scripture', 'sources'],
+      ['key-passages', 'scripture', 'original-languages', 'sources'],
+    ]);
+    // the retry: the same conversation, plus a note on what the server already accepted
+    const retry = client.requests[3].messages;
+    expect(retry.slice(0, -1)).toEqual(client.requests[2].messages);
+    const note = retry.at(-1)!;
+    expect(note.role).toBe('system');
+    expect(String(note.content)).toMatch(/^Your previous response was cut off before it ended/);
+    expect(String(note.content)).toMatch(/begin_page: Page started: “Divorce in the Bible”/);
+    expect(String(note.content)).toMatch(/add_section key-passages: Accepted 5 items in key-passages; rejected 2/);
+    expect(String(note.content)).toMatch(/Page so far: Where Scripture speaks of divorce — 5 passages; Original languages — 3 key words\./);
+
+    const study = snapshots(events).at(-1)!.study;
+    expect(study.topic?.keyPassages).toHaveLength(5);
+    expect(study.keyWords.map((k) => k.strong)).toEqual(['G630', 'H3748', 'G4202']);
+    expect(study.layout?.sections.map((s) => s.id)).toEqual(['key-passages', 'scripture', 'original-languages', 'historical-context', 'theology', 'commentary', 'sources']);
+    expect(study.opening?.text).toMatch(/^Here is a page on divorce/);
+    // both attempts are logged under turn 3; the retry's results pair with its own calls only
+    expect(logs[0].toolCalls.filter((t) => t.turn === 3)).toHaveLength(3 + again.length);
+    expect(Array.from(toolResults(client.requests[4]).keys())).toEqual(again.map((b) => (b as { id: string }).id));
+  });
+
+  it('finish_page accepted while the turn streamed, then the stream fails → the page is complete and the turn is not sent again', async () => {
+    const [finish] = (finishTurn({} as never, { index: 0 } as never) as ReturnType<typeof message>).content;
+    const failing: ScriptedTurn = async (_params, { stream }) => {
+      await stream(finish);
+      throw overloadedError();
+    };
+    const client = new FakeModelClient([researchTurn1, researchTurn2, composeTurn, failing]);
+    const logs: RunLog[] = [];
+    const events = await collect((emit) => runCompose(DIVORCE, deps(client, { retryDelaysMs: [0, 0], writeLog: async (l) => (logs.push(l), null) }), emit, new AbortController().signal));
+    expect(errorOf(events)).toBeNull();
+    expect(client.calls).toBe(4);
+    const r = events.find((e) => e.type === 'reply');
+    expect(r?.type === 'reply' && r.reply.blocks?.some((b) => b.type === 'note')).toBe(false);
+    expect(snapshots(events).at(-1)?.study.opening?.text).toMatch(/^Here is a page on divorce/);
+    expect(logs[0].outcome).toEqual({ end: 'done' });
+  });
+
+  it('the deadline mid-turn keeps the sections that already ran; a client abort applies nothing more', async () => {
+    const partway = (blocks: typeof composeBlocks): ScriptedTurn => async (params, info) => {
+      for (const b of blocks) await info.stream(b);
+      return hang(params, info);
+    };
+    const client = new FakeModelClient([researchTurn1, researchTurn2, partway([beginPage, keyPassages, keyWords])]);
+    const logs: RunLog[] = [];
+    const events = await collect((emit) => runCompose(DIVORCE, deps(client, { config: testConfig({ totalMs: 400 }), writeLog: async (l) => (logs.push(l), null) }), emit, new AbortController().signal));
+    expect(errorOf(events)).toBeNull();
+    const final = snapshots(events).at(-1)!;
+    expect(final.complete).toBe(true);
+    expect(final.study.layout?.sections.map((s) => s.id)).toEqual(['key-passages', 'scripture', 'original-languages', 'sources']);
+    expect(final.study.opening?.text).toBe(final.study.summary?.text);
+    const r = events.find((e) => e.type === 'reply');
+    expect(r?.type === 'reply' && r.reply.blocks?.some((b) => b.type === 'note' && b.tone === 'caution')).toBe(true);
+    expect(logs[0].outcome.end).toBe('deadline');
+
+    const controller = new AbortController();
+    const aborting = new FakeModelClient([researchTurn1, researchTurn2, partway([beginPage, keyPassages])]);
+    const seen: InferenceEvent[] = [];
+    await runCompose(DIVORCE, deps(aborting), (e) => {
+      seen.push(e);
+      if (e.type === 'study' && e.study.layout?.sections.some((s) => s.id === 'key-passages')) setTimeout(() => controller.abort(), 10);
+    }, controller.signal);
+    expect(errorOf(seen)?.code).toBe('aborted');
+    expect(snapshots(seen).map((s) => s.complete)).toEqual([false, false]);
+    expect(seen.findIndex((e) => e.type === 'study')).toBeLessThan(seen.findIndex((e) => e.type === 'error'));
+    expect(aborting.calls).toBe(3);
+  });
+
+  it('an API failure that outlasts the retries, after calls ran mid-turn: the page is finished with those sections (interrupted)', async () => {
+    const failing: ScriptedTurn = async (_params, { stream }) => {
+      for (const b of [beginPage, keyPassages]) await stream(b);
+      throw overloadedError();
+    };
+    const client = new FakeModelClient([researchTurn1, researchTurn2, failing, fail(overloadedError()), fail(overloadedError())]);
+    const logs: RunLog[] = [];
+    const events = await collect((emit) => runCompose(DIVORCE, deps(client, { retryDelaysMs: [0, 0], writeLog: async (l) => (logs.push(l), null) }), emit, new AbortController().signal));
+    expect(errorOf(events)).toBeNull();
+    expect(client.calls).toBe(5);
+    const final = snapshots(events).at(-1)!;
+    expect(final.complete).toBe(true);
+    expect(final.study.layout?.sections.map((s) => s.id)).toEqual(['key-passages', 'scripture', 'sources']);
+    const r = events.find((e) => e.type === 'reply');
+    expect(r?.type === 'reply' && r.reply.text).toMatch(/interrupted by a temporary Claude API error/);
+    expect(logs[0].outcome).toMatchObject({ end: 'interrupted', interruption: { code: 'overloaded' } });
+  });
+
+  it('max_tokens mid-turn: the calls that streamed completely stand, the cut one never runs, and the page is finished without an opening', async () => {
+    const client = new FakeModelClient([researchTurn1, researchTurn2, reply([beginPage, keyPassages, keyWords, background], 'max_tokens')]);
+    const logs: RunLog[] = [];
+    const events = await collect((emit) => runCompose(DIVORCE, deps(client, { writeLog: async (l) => (logs.push(l), null) }), emit, new AbortController().signal));
+    expect(errorOf(events)).toBeNull();
+    expect(client.calls).toBe(3);
+    expect(decided(logs[0])).toEqual(['begin_page', 'key-passages', 'original-languages']);
+    const final = snapshots(events).at(-1)!;
+    expect(final.complete).toBe(true);
+    expect(final.study.context).toEqual([]);
+    expect(final.study.opening?.text).toBe(final.study.summary?.text);
+    const r = events.find((e) => e.type === 'reply');
+    expect(r?.type === 'reply' && r.reply.blocks?.some((b) => b.type === 'note' && b.tone === 'caution')).toBe(true);
+    expect(logs[0].outcome.end).toBe('max_tokens');
+  });
+
+  it('refusal mid-turn: what the refused turn’s calls put on the page is taken back, the cut one never runs, and the run ends as a refusal', async () => {
+    const client = new FakeModelClient([researchTurn1, researchTurn2, reply([beginPage, keyPassages, keyWords], 'refusal')]);
+    const logs: RunLog[] = [];
+    const events = await collect((emit) => runCompose(DIVORCE, deps(client, { writeLog: async (l) => (logs.push(l), null) }), emit, new AbortController().signal));
+    expect(errorOf(events)).toMatchObject({ code: 'refusal', message: 'The model declined to compose this page, so nothing was generated.' });
+    // both calls ran (and are logged, marked withdrawn); the page shown last is the empty shell again
+    expect(decided(logs[0])).toEqual(['begin_page', 'key-passages']);
+    expect(logs[0].toolCalls.filter((t) => t.turn === 3).map((t) => t.result)).toEqual([expect.stringMatching(/^\[withdrawn/), expect.stringMatching(/^\[withdrawn/)]);
+    expect(snapshots(events).map((s) => s.complete)).toEqual([false, false, false]);
+    const last = snapshots(events).at(-1)!.study;
+    expect(last.title).toBe('divorce');
+    expect(last.topic).toBeUndefined();
+    expect(last.layout?.sections.map((s) => s.id)).toEqual(['sources']);
+  });
+
+  it('refusal in a later turn: the page goes back to what the earlier turns wrote', async () => {
+    const client = new FakeModelClient([researchTurn1, researchTurn2, reply([beginPage, keyPassages]), reply([keyWords, background], 'refusal')]);
+    const events = await collect((emit) => runCompose(DIVORCE, deps(client), emit, new AbortController().signal));
+    expect(errorOf(events)).toMatchObject({ code: 'refusal', message: expect.stringMatching(/sections shown so far passed the source checks/) });
+    expect(snapshots(events).map((s) => s.study.layout?.sections.map((x) => x.id))).toEqual([
+      ['scripture', 'sources'],
+      ['key-passages', 'scripture', 'sources'],
+      ['key-passages', 'scripture', 'original-languages', 'sources'],
+      ['key-passages', 'scripture', 'sources'],
+    ]);
+    expect(snapshots(events).at(-1)!.study.keyWords).toEqual([]);
+  });
+
+  it('a section citing evidence that a research call in the same turn first showed is rejected; sent again in the next turn it is accepted', async () => {
+    const hebrews = { section: 'key-passages', items: [{ reference: 'Hebrews 13:4', title: 'Honour marriage', note: 'Marriage should be held in honour.', group: 'Marriage', evidence: ['E18'] }] };
+    const read = toolUse('read_passage', { reference: 'Hebrews 13:4' });
+    const client = new FakeModelClient([researchTurn1, researchTurn2, reply([beginPage, read, toolUse('add_section', hebrews)]), reply([toolUse('add_section', hebrews)]), finishTurn]);
+    const events = await collect((emit) => runCompose(DIVORCE, deps(client), emit, new AbortController().signal));
+    expect(errorOf(events)).toBeNull();
+    const [, shown, sameTurn] = Array.from(toolResults(client.requests[3]).values());
+    expect(shown.content).toMatch(/\[E18\] Hebrews 13:4/);
+    expect(sameTurn).toMatchObject({ isError: true, content: expect.stringMatching(/rejected[\s\S]*E18: a call in this same turn first showed its text/) });
+    expect(Array.from(toolResults(client.requests[4]).values())[0].content).toMatch(/^Accepted 1 item in key-passages/);
+  });
+
+  it('finish_page sent with a repair that is rejected again is not accepted; finish_page alone in the next turn is', async () => {
+    const repair = toolUse('add_section', (keyPassages as { input: unknown }).input); // loses the same 2 items again
+    const [finish] = (finishTurn({} as never, { index: 0 } as never) as ReturnType<typeof message>).content;
+    const client = new FakeModelClient([researchTurn1, researchTurn2, composeTurn, reply([repair, finish]), finishTurn]);
+    const logs: RunLog[] = [];
+    const events = await collect((emit) => runCompose(DIVORCE, deps(client, { writeLog: async (l) => (logs.push(l), null) }), emit, new AbortController().signal));
+    expect(errorOf(events)).toBeNull();
+    expect(client.calls).toBe(5);
+    const [repaired, refused] = Array.from(toolResults(client.requests[4]).values());
+    expect(repaired.content).toMatch(/^Accepted 5 items in key-passages; rejected 2/);
+    expect(refused).toMatchObject({ isError: true, content: expect.stringMatching(/^Error: finish_page was not accepted: an add_section earlier in this turn was rejected[\s\S]*Page so far: /) });
+    expect(snapshots(events).at(-1)?.study.opening?.text).toMatch(/^Here is a page on divorce/);
+    expect(logs[0].outcome).toEqual({ end: 'done' });
+
+    // a repair that lands in full: finish_page in the same turn is accepted
+    const clean = toolUse('add_section', { ...(keyPassages as { input: Record<string, unknown> }).input, items: ((keyPassages as { input: { items: unknown[] } }).input.items).slice(0, 5) });
+    const ok = new FakeModelClient([researchTurn1, researchTurn2, composeTurn, reply([clean, finish])]);
+    const okEvents = await collect((emit) => runCompose(DIVORCE, deps(ok), emit, new AbortController().signal));
+    expect(errorOf(okEvents)).toBeNull();
+    expect(ok.calls).toBe(4);
+    expect(snapshots(okEvents).at(-1)?.study.opening?.text).toMatch(/^Here is a page on divorce/);
+  });
+
+  it('a mid-output fallback: what the declined attempt’s calls did is taken back at the boundary; the fallback model’s calls run after the turn and alone get results', async () => {
+    const declined = toolUse('begin_page', (beginPage as { input: unknown }).input, 'toolu_declined');
+    const declinedWords = toolUse('add_section', (keyWords as { input: unknown }).input, 'toolu_declined_words');
+    const begin = toolUse('begin_page', (beginPage as { input: unknown }).input, 'toolu_fallback_begin');
+    const passages = toolUse('add_section', (keyPassages as { input: unknown }).input, 'toolu_fallback_passages');
+    const client = new FakeModelClient([researchTurn1, researchTurn2, reply([declined, declinedWords, fallbackBlock(), begin, passages]), finishTurn]);
+    const logs: RunLog[] = [];
+    const events = await collect((emit) => runCompose(DIVORCE, deps(client, { writeLog: async (l) => (logs.push(l), null) }), emit, new AbortController().signal));
+    expect(errorOf(events)).toBeNull();
+    expect(decided(logs[0]).slice(0, 4)).toEqual(['begin_page', 'original-languages', 'begin_page', 'key-passages']);
+    const turn3 = logs[0].toolCalls.filter((t) => t.turn === 3);
+    expect(turn3.map((t) => t.id)).toEqual(['toolu_declined', 'toolu_declined_words', 'toolu_fallback_begin', 'toolu_fallback_passages']);
+    expect(turn3.map((t) => t.result.startsWith('[withdrawn'))).toEqual([true, true, false, false]);
+    // the declined page was shown, then withdrawn (back to the empty shell) before the fallback model's page
+    expect(snapshots(events).slice(0, 3).map((s) => s.study.layout?.sections.map((x) => x.id))).toEqual([
+      ['scripture', 'sources'],
+      ['scripture', 'original-languages', 'sources'],
+      ['sources'],
+    ]);
+    const results = toolResults(client.requests[3]);
+    expect(Array.from(results.keys())).toEqual(['toolu_fallback_begin', 'toolu_fallback_passages']);
+    expect(results.get('toolu_fallback_passages')?.content).toMatch(/Page so far: Where Scripture speaks of divorce — 5 passages\./);
+    const echoed = client.requests[3].messages.at(-2)!;
+    expect(JSON.stringify(echoed.content)).not.toContain('toolu_declined');
+    const final = snapshots(events).at(-1)!;
+    expect(final.complete).toBe(true);
+    expect(final.study.keyWords).toEqual([]);
+    expect(final.study.layout?.sections.map((s) => s.id)).toEqual(['key-passages', 'scripture', 'sources']);
+  });
+
+  it('a mid-output fallback after the declined attempt’s finish_page was accepted: the page is open again for the fallback model', async () => {
+    const [finish] = (finishTurn({} as never, { index: 0 } as never) as ReturnType<typeof message>).content;
+    const declinedFinish = toolUse('finish_page', (finish as { input: unknown }).input, 'toolu_declined_finish');
+    const words = toolUse('add_section', (keyWords as { input: unknown }).input, 'toolu_fallback_words');
+    const client = new FakeModelClient([researchTurn1, researchTurn2, composeTurn, reply([declinedFinish, fallbackBlock(), words]), finishTurn]);
+    const logs: RunLog[] = [];
+    const events = await collect((emit) => runCompose(DIVORCE, deps(client, { writeLog: async (l) => (logs.push(l), null) }), emit, new AbortController().signal));
+    expect(errorOf(events)).toBeNull();
+    expect(client.calls).toBe(5);
+    expect(decided(logs[0]).filter((d) => d === 'finish_page')).toHaveLength(2);
+    expect(Array.from(toolResults(client.requests[4]).keys())).toEqual(['toolu_fallback_words']);
+    expect(snapshots(events).at(-1)?.study.opening?.text).toMatch(/^Here is a page on divorce/);
+    expect(logs[0].outcome).toEqual({ end: 'done' });
   });
 });

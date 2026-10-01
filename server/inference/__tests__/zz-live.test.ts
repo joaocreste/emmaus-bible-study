@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { it } from 'vitest';
 import { loadEnv } from 'vite';
 import { getKnowledgeBase, evidenceFullText } from '../../kb';
@@ -7,10 +8,15 @@ import { runCompose } from '../run';
 import { createRunLogWriter, type RunLog } from '../logs';
 import type { InferenceEvent } from '../../../src/inference/protocol';
 
-const ROOT = '/Users/joaocreste/dev/bible-app';
-it.skipIf(!process.env.EMMAUS_LIVE)('live compose smoke test', async () => {
-  const env = { ...loadEnv('development', ROOT, ''), EMMAUS_EFFORT: 'medium', EMMAUS_MAX_RESEARCH_CALLS: '6' };
-  const config = loadInferenceConfig(env, ROOT);
+/** the repository root (this file is server/inference/__tests__) */
+const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
+/** This test bills the API: it runs only when EMMAUS_LIVE is set to something other than "off" and a credential is found. */
+const LIVE = (process.env.EMMAUS_LIVE ?? '').trim().toLowerCase();
+const liveConfig =
+  LIVE && LIVE !== 'off' ? loadInferenceConfig({ ...loadEnv('development', ROOT, ''), EMMAUS_EFFORT: 'medium', EMMAUS_MAX_RESEARCH_CALLS: '6' }, ROOT) : null;
+
+it.skipIf(!liveConfig?.credential.source)('live compose smoke test', async () => {
+  const config = liveConfig!;
   console.log('credential source:', config.credential.source, 'model:', config.model, 'effort:', config.effort);
   const kb = getKnowledgeBase(ROOT, { log: () => {} });
   await kb.ready();

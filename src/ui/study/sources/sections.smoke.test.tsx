@@ -13,6 +13,8 @@ import { I18nProvider } from '../../../i18n/I18nProvider';
 import type { Locale } from '../../../i18n/locales';
 import { ProvidersProvider } from '../../../providers/ProvidersContext';
 import type { ProviderRegistry } from '../../../providers/types';
+import { keyPointFocus } from '../keyPointFocus';
+import { KeyPoints } from '../KeyPoints';
 import { CommentarySection } from '../sections/CommentarySection';
 import { HistoricalContextSection } from '../sections/HistoricalContextSection';
 import { KeyPassagesSection } from '../sections/KeyPassagesSection';
@@ -252,6 +254,55 @@ function render(Section: (p: SectionProps) => unknown, study: Study, locale: Loc
 }
 
 const text = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+
+describe('key points (server render)', () => {
+  const point: Study['concepts'][number] = {
+    id: 'concept-1',
+    label: 'Fixture point: may the wronged spouse separate?',
+    aliases: ['fixture point'],
+    answer: { text: 'Fixture answer to the point.', provenance: { ...syn(), verification: 'generated' } },
+    primarySection: 'theology',
+    verses: [{ book: 'ROM', chapter: 3, verse: 1 }],
+    keyWordIds: [],
+    crossReferenceIds: ['x-1'],
+    contextIds: [],
+    themeIds: ['th-1'],
+    perspectiveSetIds: [],
+    commentaryIds: [],
+  };
+
+  it('lists the concepts of a generated page as its key points, collapsed, with their answers', () => {
+    const html = renderToStaticMarkup(
+      <I18nProvider locale="pt">
+        <ProvidersProvider registry={registry}>
+          <KeyPoints study={{ ...topic, depth: 'generated', concepts: [point] }} />
+        </ProvidersProvider>
+      </I18nProvider>,
+    );
+    expect(text(html)).toContain('Pontos-chave');
+    expect(html).toMatch(/aria-expanded="false"/);
+    expect(text(html)).toContain('Fixture point: may the wronged spouse separate?');
+    expect(text(html)).toContain('Fixture answer to the point.');
+    expect(text(html)).toContain('Mostrar no estudo');
+  });
+
+  it('shows nothing for curated and library studies', () => {
+    for (const depth of ['curated', 'library'] as const) {
+      expect(renderToStaticMarkup(<I18nProvider locale="en"><KeyPoints study={{ ...topic, depth, concepts: [point] }} /></I18nProvider>)).toBe('');
+    }
+  });
+
+  it('focuses the section and the items a key point links', () => {
+    expect(keyPointFocus(point, 'why')).toEqual({
+      section: 'theology',
+      highlightVerses: [{ book: 'ROM', chapter: 3, verse: 1 }],
+      expandIds: ['th-1'],
+      pinIds: ['x-1'],
+      crossReferenceFilter: {},
+      reason: 'why',
+    });
+  });
+});
 
 describe('study sections (server render)', () => {
   it('key passages: orientation, groups, actions', () => {

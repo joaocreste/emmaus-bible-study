@@ -2,12 +2,14 @@
  * Evidence drafts: how each kind of retrieved item is presented to the model.
  *
  * Text policy. `EvidenceDraft.text` is what the model reads and what quotations are
- * checked against. Long items are excerpted (≤ ~1,600 characters, cut at sentence
- * boundaries around the query’s terms, the cuts marked “[…]”), so a research call
- * stays readable and cheap. The complete retrieved text of every excerpted item is
- * kept here and returned by `evidenceFullText(draft)`, for a validator that wants to
- * accept a verbatim span from the whole document — the text is still retrieved,
- * never generated.
+ * checked against. Long items are excerpted (search hits ≤ ~700 characters, commentary
+ * sections ≤ ~900, topical entries ≤ ~1,400, lexicon entries ≤ ~1,600, cut at sentence
+ * boundaries around the query’s terms, the cuts marked “[…]”), so a research call stays
+ * readable and cheap.
+ * The complete retrieved text of every excerpted item is kept here and returned by
+ * `evidenceFullText(draft)`, for a validator that wants to accept a verbatim span from
+ * the whole document — the text is still retrieved, never generated — and for
+ * read_document, which opens an item's whole text by its evidence id.
  */
 import { getBook } from '../../src/domain/books';
 import type { BookId, PassageRef, VerseRef } from '../../src/domain/models';
@@ -18,8 +20,21 @@ import type { SourceRegistry } from '../../src/providers/types';
 import { isQuotable, type KbIndexDoc } from './documents';
 import { excerptAround, queryTerms, trimAtSentence } from './text';
 
+/** A lexicon entry. */
 export const EXCERPT_CHARS = 1600;
-export const TOPIC_CHARS = 2000;
+/** A search hit (a dictionary article, a confession, a note…): enough to judge and cite it; read_document opens the rest. */
+export const SEARCH_EXCERPT_CHARS = 700;
+/** A commentary section (with `query`, the part on that point). */
+export const COMMENTARY_EXCERPT_CHARS = 900;
+/** A topical-index entry: its reference groups, those on the point first (the least-cited kind). */
+export const TOPIC_CHARS = 1400;
+/** The most of one item's text a research result shows (the ledger's cut; verse-by-verse texts keep more). */
+export const ITEM_CHARS = 2000;
+/**
+ * An opened part of a long text or a book-introduction section: excerpted around the
+ * query within ITEM_CHARS (the “[…]” marks included), so the ledger never cuts its tail.
+ */
+export const PART_EXCERPT_CHARS = ITEM_CHARS - 4;
 
 /* ------------------------------------------------------------------ */
 /* Full text of excerpted items                                        */
@@ -83,7 +98,7 @@ export function docQuotable(doc: KbIndexDoc, sources: SourceRegistry): boolean {
 /* ------------------------------------------------------------------ */
 
 /** A search hit as evidence: long texts excerpted around the query terms; topical entries via topicalEvidence. */
-export function docEvidence(doc: KbIndexDoc, sources: SourceRegistry, terms: ReadonlySet<string>, max = EXCERPT_CHARS, focus?: PassageRef): EvidenceDraft {
+export function docEvidence(doc: KbIndexDoc, sources: SourceRegistry, terms: ReadonlySet<string>, max = SEARCH_EXCERPT_CHARS, focus?: PassageRef): EvidenceDraft {
   if (doc.aspects?.length) return topicalEvidence(doc, sources, terms, TOPIC_CHARS, focus);
   const cut = excerptAround(doc.text, terms, max);
   const draft = assign(
@@ -384,7 +399,7 @@ export function commentaryEvidence(input: {
     name = input.authorId === 'henry-continuators' ? `${name} (${book} completed by Henry’s continuators)` : `${name} (${book} by ${author?.name ?? input.authorId})`;
   }
   const title = isTyndale ? `Tyndale note on ${formatRef(input.sectionRef)}` : `${name} on ${formatRef(input.sectionRef)}`;
-  const max = input.max ?? EXCERPT_CHARS;
+  const max = input.max ?? COMMENTARY_EXCERPT_CHARS;
   const cut = input.terms?.size ? excerptAround(input.text, input.terms, max) : input.text.length > max ? trimAtSentence(input.text, max) : { text: input.text, trimmed: false };
   const draft = assign(
     { kind: isTyndale ? 'study-note' : 'commentary', title, text: cut.text, sourceId: input.sourceId, quotable: isQuotable(sources, input.sourceId) },

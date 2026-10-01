@@ -154,7 +154,7 @@ export function ReaderSettings({ showTranslation = false }: { showTranslation?: 
 /** "Live composition" switch + what the inference layer is (or why it is unavailable). */
 /** Why live composition is off here, in the reader's language (the client's own reasons and the server's codes). */
 function unavailableReason(status: InferenceStatus, locale: Locale): string | undefined {
-  const own = locale === 'en' ? undefined : clientMessageId(status.reason);
+  const own = clientMessageId(status.reason);
   return own ? translate(locale, 'engine', `inference.client.${own}`) : statusReasonText(status, locale);
 }
 
@@ -172,7 +172,7 @@ function LiveCompositionSetting() {
       ? t('live.unavailable', { reason: unavailableReason(status, locale) ?? t('live.notRunning') })
       : on
         ? describeAvailable(status, locale)
-        : t('live.off', { status: describeAvailable(status, locale) });
+        : t('live.off');
   return (
     <div className={styles.liveGroup}>
       <div className={cx(styles.switchRow, styles.switchRowTight)}>

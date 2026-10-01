@@ -42,6 +42,10 @@ export const messages = defineMessages({
     'focus.studyUpdated': 'Study updated:',
     'focus.clear': 'Clear focus',
 
+    'keyPoints.title': 'Key points',
+    'keyPoints.show': 'Show in the study',
+    'keyPoints.reason': '{label} — key point',
+
     'header.eyebrow.topic': 'Topic study',
     'header.eyebrow.passage': 'Passage study',
     'header.eyebrow.passageIn': 'Passage study · {section}',
@@ -173,6 +177,10 @@ export const messages = defineMessages({
 
     'focus.studyUpdated': 'Estudo atualizado:',
     'focus.clear': 'Limpar foco',
+
+    'keyPoints.title': 'Pontos-chave',
+    'keyPoints.show': 'Mostrar no estudo',
+    'keyPoints.reason': '{label} — ponto-chave',
 
     'header.eyebrow.topic': 'Estudo temático',
     'header.eyebrow.passage': 'Estudo de passagem',
@@ -306,6 +314,10 @@ export const messages = defineMessages({
     'focus.studyUpdated': 'Étude mise à jour :',
     'focus.clear': 'Tout afficher',
 
+    'keyPoints.title': 'Points clés',
+    'keyPoints.show': 'Voir dans l’étude',
+    'keyPoints.reason': '{label} — point clé',
+
     'header.eyebrow.topic': 'Étude thématique',
     'header.eyebrow.passage': 'Étude de passage',
     'header.eyebrow.passageIn': 'Étude de passage · {section}',
@@ -437,6 +449,10 @@ export const messages = defineMessages({
 
     'focus.studyUpdated': 'Estudio actualizado:',
     'focus.clear': 'Quitar el foco',
+
+    'keyPoints.title': 'Puntos clave',
+    'keyPoints.show': 'Mostrar en el estudio',
+    'keyPoints.reason': '{label} — punto clave',
 
     'header.eyebrow.topic': 'Estudio temático',
     'header.eyebrow.passage': 'Estudio de pasaje',

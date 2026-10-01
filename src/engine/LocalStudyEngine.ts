@@ -18,6 +18,8 @@ import {
   describeFocus,
   engineT,
   fillSuggestions,
+  listJoin,
+  lowerFirstIn,
   localeOf,
   mergeCitations,
   para,
@@ -34,7 +36,8 @@ import { respondGreeting, respondHelp, respondSources, respondUnknown } from './
 import { curatedForPassage, openById, openCurated, respondOpenPassage, respondOpenTopic } from './respond/open';
 import { respondExplainVerse } from './respond/verse';
 import { respondWordStudy } from './respond/word';
-import { bestPhraseScore, normalizePhrase, normalizeTopicQuery } from './text';
+import { asksNewQuestion } from './question';
+import { bestPhraseScore, normalizePhrase, normalizeTopicQuery, restoreSpelling } from './text';
 import type { EngineContext, EngineResult, Intent, IntentKind, StudyEngine } from './types';
 
 /** Intents that work on a study (and may open one first when the message names another passage). */
@@ -154,7 +157,18 @@ export class LocalStudyEngine implements StudyEngine {
       }
       if (!ctx.study) return this.withoutStudy(message, parsed, ctx);
     }
+    // A complex question with no study of its own: the library topic that covers most of it, saying what it raises
+    // (with a study open, only when the study cannot answer it).
+    const question = asksNewQuestion(message, intent, ctx.study);
+    if (question && !ctx.study) {
+      const keyed = await this.questionTopic(message, parsed, ctx);
+      if (keyed) return this.finalize(message, keyed.intent ?? intent, ctx, keyed);
+    }
     const draft = await this.run(env);
+    if (question && ctx.study && (!draft || draft.declined)) {
+      const keyed = await this.questionTopic(message, parsed, ctx);
+      if (keyed) return this.finalize(message, keyed.intent ?? intent, ctx, keyed);
+    }
     // "What is the fruit of the Spirit?" inside the Holy Spirit study resolves to the open study:
     // answer from inside it rather than saying "we're already here".
     if (draft?.alreadyOpen && intent.kind === 'open-topic' && ctx.study && intent.slots.topic) {
@@ -276,6 +290,47 @@ export class LocalStudyEngine implements StudyEngine {
       conversation: inner.conversation ?? {},
       steps: [...opened.steps, ...inner.steps],
       customUpdatesOnly: false,
+    };
+  }
+
+  /**
+   * The library topic a complex question turns on most ("…abusive relationship… divorce… a new marriage?"
+   * → Marriage, by "divórcio" and "casamento"), opened with a note naming the points the question raises —
+   * the library has no study of the question itself. Undefined when no topic phrase occurs in it.
+   */
+  private async questionTopic(message: string, parsed: ParsedMessage, ctx: EngineContext): Promise<ReplyDraft | undefined> {
+    const locale = localeOf(ctx);
+    const text = ` ${normalizePhrase(message)} `;
+    const found = (await this.knownTopicPhrases(locale)).filter((p) => p.length > 2 && text.includes(` ${p} `));
+    if (!found.length) return undefined;
+    // Phrases inside a longer phrase found too ("marriage" in "christian marriage") are one point, not two.
+    const phrases = found.filter((p) => !found.some((q) => q !== p && ` ${q} `.includes(` ${p} `))).sort((a, b) => text.indexOf(` ${a} `) - text.indexOf(` ${b} `));
+    const byTopic = new Map<string, { phrases: string[]; weight: number }>();
+    const points: string[] = [];
+    for (const phrase of phrases) {
+      const match = ((await attempt(() => this.providers.topics.findTopics(phrase, locale), [])) as TopicMatchLike[])[0];
+      const id = match && match.score >= 0.9 ? match.id : `phrase:${phrase}`;
+      const entry = byTopic.get(id) ?? { phrases: [], weight: 0 };
+      entry.phrases.push(phrase);
+      entry.weight += phrase.split(' ').length;
+      byTopic.set(id, entry);
+      // a word or two as the reader wrote it ("divórcio"); a longer index phrase ("how should i pray") by its topic's name
+      const label = phrase.split(' ').length <= 2 || !match || match.score < 0.9 ? restoreSpelling(phrase, message) : lowerFirstIn(match.name, locale);
+      if (!points.includes(label)) points.push(label);
+    }
+    const best = [...byTopic.values()].sort((a, b) => b.weight - a.weight || b.phrases[0].length - a.phrases[0].length)[0];
+    const topic = [...best.phrases].sort((a, b) => b.length - a.length)[0];
+    const intent: Intent = { kind: 'open-topic', confidence: 0.5, slots: { topic } };
+    const draft = await respondOpenTopic(this.env(message, { ...parsed, intent }, ctx, ctx.study));
+    if (!draft.study || draft.declined) return undefined;
+    const t = engineT(locale);
+    const named = points.map((p) => `**${p}**`);
+    const study = t('studyName', { kind: draft.study.kind, title: draft.study.title });
+    return {
+      ...draft,
+      intent,
+      blocks: [para(t('question.keyPoints', { points: listJoin(named, locale), study })), ...draft.blocks],
+      steps: [step('Question', t('trace.questionTopics', { points: phrases.join(', '), topic }), 'engine:local-rules'), ...draft.steps],
     };
   }
 

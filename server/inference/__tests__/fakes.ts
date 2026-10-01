@@ -2,6 +2,7 @@
  * Test doubles for the inference layer:
  *
  * - FakeModelClient replays scripted assistant turns (the seam is `ModelClient.stream`),
+ *   streaming their blocks one by one (so composition calls run before the turn ends) and
  *   recording the params of every request so tests can inspect tool results and
  *   system messages the loop sent back.
  * - createFakeKb() is a KnowledgeBase whose retrieval methods return fixed fixture
@@ -23,7 +24,7 @@ import { createFsLoader } from '../../../src/providers/local/__tests__/fsLoader'
 import type { ProviderRegistry } from '../../../src/providers/types';
 import type { KbHoldings, KnowledgeBase, SearchOptions } from '../../kb/types';
 import type { InferenceConfig } from '../config';
-import type { BetaContentBlock, BetaMessage, ModelClient, ModelStream, StreamParams } from '../modelClient';
+import { blockEndWatcher, type BetaContentBlock, type BetaMessage, type BetaRawMessageStreamEvent, type EndedBlock, type ModelClient, type ModelStream, type StreamParams } from '../modelClient';
 
 /* ------------------------------------------------------------------ */
 /* Providers                                                           */
@@ -317,14 +318,37 @@ export function createFakeKb(options: FakeKbOptions = {}): FakeKb {
 /* Scripted model client                                               */
 /* ------------------------------------------------------------------ */
 
-export type ScriptedTurn = (params: StreamParams, info: { signal?: AbortSignal; index: number }) => BetaMessage | Promise<BetaMessage>;
+/** Streams one content block now (start, input deltas, stop); `cut` sends only part of a tool's input JSON, as max_tokens or a refusal would. */
+export type StreamBlock = (block: BetaContentBlock, options?: { cut?: boolean }) => Promise<void>;
 
+/** Token counts of a turn attempt, as TurnRecord['usage'] counts them. */
+export type FakeUsage = Partial<{ input: number; output: number; cacheRead: number; cacheCreation: number }>;
+
+/** Streams message_start (and a message_delta) with this usage: what the stream's partialMessage() reports if the turn then fails. */
+export type StartMessage = (usage?: FakeUsage) => void;
+
+export type ScriptedTurn = (params: StreamParams, info: { signal?: AbortSignal; index: number; stream: StreamBlock; start: StartMessage }) => BetaMessage | Promise<BetaMessage>;
+
+/**
+ * Replays scripted turns. Unless `streaming: false`, each turn's content blocks are streamed
+ * (content_block_start / input_json_delta / content_block_stop, through the real
+ * blockEndWatcher) before its final message resolves, yielding to the event loop after each
+ * block; a max_tokens or refusal turn's last tool_use is streamed cut off. A turn may stream
+ * its blocks itself with `info.stream` (then nothing more is streamed for it), e.g. to fail
+ * or hang midway, and report what it was billed before failing with `info.start`.
+ */
 export class FakeModelClient implements ModelClient {
   /** deep copies of the params of every request, in order */
   readonly requests: StreamParams[] = [];
   private index = 0;
+  private readonly streaming: boolean;
 
-  constructor(private readonly turns: ScriptedTurn[]) {}
+  constructor(
+    private readonly turns: ScriptedTurn[],
+    options: { streaming?: boolean } = {},
+  ) {
+    this.streaming = options.streaming ?? true;
+  }
 
   get calls(): number {
     return this.requests.length;
@@ -335,18 +359,61 @@ export class FakeModelClient implements ModelClient {
     const i = this.index++;
     const turn = this.turns[i];
     const signal = options.signal;
+    const listeners: ((block: EndedBlock) => void)[] = [];
+    const watch = blockEndWatcher((block) => listeners.forEach((l) => l(block)));
+    let next = 0;
+    let streamedByTurn = false;
+    let partial: BetaMessage | null = null;
+    const start: StartMessage = (u = {}) => {
+      partial = { ...message([], null), usage: { input_tokens: u.input ?? 0, output_tokens: u.output ?? 0, cache_read_input_tokens: u.cacheRead ?? 0, cache_creation_input_tokens: u.cacheCreation ?? 0 } } as BetaMessage;
+    };
+    const send = async (block: BetaContentBlock, cut = false) => {
+      if (signal?.aborted) throw new Anthropic.APIUserAbortError();
+      for (const event of blockEvents(block, next++, cut)) watch(event);
+      // like the SDK's currentMessage, what partialMessage() reports holds the blocks streamed so far
+      if (partial) partial = { ...partial, content: [...partial.content, block] };
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    };
+    const stream: StreamBlock = (block, o = {}) => {
+      streamedByTurn = true;
+      return send(block, o.cut);
+    };
     const run = async (): Promise<BetaMessage> => {
+      await Promise.resolve(); // the loop registers its listener right after stream() returns
       if (signal?.aborted) throw new Anthropic.APIUserAbortError();
       if (!turn) throw new Error(`FakeModelClient: no scripted turn #${i + 1}`);
-      return turn(params, { signal, index: i });
+      const m = await turn(params, { signal, index: i, stream, start });
+      if (this.streaming && !streamedByTurn) {
+        const cutAt = m.stop_reason === 'max_tokens' || m.stop_reason === 'refusal' ? m.content.findLastIndex((b) => b.type === 'tool_use') : -1;
+        for (const [k, block] of m.content.entries()) await send(block, k === cutAt);
+      }
+      return m;
     };
     const promise = run();
     promise.catch(() => {});
     return {
       finalMessage: () => promise,
       abort: () => {},
+      partialMessage: () => partial,
+      ...(this.streaming ? { onBlockEnd: (listener: (block: EndedBlock) => void) => void listeners.push(listener) } : {}),
     };
   }
+}
+
+/** The raw stream events of one content block; a tool's input JSON arrives in chunks (only its first half when `cut`). */
+function blockEvents(block: BetaContentBlock, index: number, cut: boolean): BetaRawMessageStreamEvent[] {
+  if (block.type !== 'tool_use') {
+    return [{ type: 'content_block_start', index, content_block: block } as BetaRawMessageStreamEvent, { type: 'content_block_stop', index }];
+  }
+  const full = JSON.stringify(block.input) ?? '';
+  const json = cut ? full.slice(0, Math.floor(full.length / 2)) : full;
+  const deltas: BetaRawMessageStreamEvent[] = [];
+  for (let at = 0; at < json.length; at += 64) deltas.push({ type: 'content_block_delta', index, delta: { type: 'input_json_delta', partial_json: json.slice(at, at + 64) } });
+  return [
+    { type: 'content_block_start', index, content_block: { type: 'tool_use', id: block.id, name: block.name, input: {} } } as BetaRawMessageStreamEvent,
+    ...deltas,
+    { type: 'content_block_stop', index },
+  ];
 }
 
 let blockSeq = 0;
@@ -357,6 +424,11 @@ export function toolUse(name: string, input: unknown, id?: string): BetaContentB
 
 export function textBlock(text: string): BetaContentBlock {
   return { type: 'text', text, citations: null } as unknown as BetaContentBlock;
+}
+
+/** A mid-output server-side fallback boundary: the blocks before it came from a model that declined. */
+export function fallbackBlock(to = 'claude-sonnet-5'): BetaContentBlock {
+  return { type: 'fallback', from: { model: 'claude-opus-5' }, to: { model: to }, trigger: { type: 'refusal' } } as unknown as BetaContentBlock;
 }
 
 export function message(content: BetaContentBlock[], stop_reason: BetaMessage['stop_reason'] = 'tool_use', extra: Partial<{ model: string; cacheRead: number }> = {}): BetaMessage {
@@ -385,10 +457,11 @@ export const hang: ScriptedTurn = (_params, { signal }) =>
     signal?.addEventListener('abort', () => reject(new Anthropic.APIUserAbortError()), { once: true });
   });
 
-/** A turn that throws. */
+/** A turn that throws (after message_start with `usage`, when given). */
 export const fail =
-  (err: Error): ScriptedTurn =>
-  () => {
+  (err: Error, usage?: FakeUsage): ScriptedTurn =>
+  (_params, { start }) => {
+    if (usage) start(usage);
     throw err;
   };
 
