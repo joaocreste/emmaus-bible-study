@@ -5,6 +5,7 @@ import { useProviders } from '../../providers/ProvidersContext';
 import { useSessionActions } from '../../state/session';
 import { ProvenanceTag } from '../primitives';
 import { citationAuthorName, localizeAuthor } from './attribution';
+import { localizeLocator } from './locator';
 import { ScriptText } from './ScriptText';
 import styles from './SourceChip.module.css';
 
@@ -26,8 +27,9 @@ export function SourceChip({ citation }: { citation: Citation }) {
   const title = source ? source.title : t('chip.unknownSource', { id: citation.sourceId });
   const who = author && source?.type !== 'bible-translation' ? `${citationAuthorName(author)}, ` : '';
   const label = `${who}${shorten(title)}`;
+  const locator = citation.locator ? localizeLocator(citation.locator, locale, (ref) => t('chip.onRef', { ref })) : undefined;
   // The chip truncates visually; its accessible name keeps the whole citation (it starts with the visible label).
-  const full = `${who}${title}${citation.locator ? `, ${citation.locator}` : ''}`;
+  const full = `${who}${title}${locator ? `, ${locator}` : ''}`;
   const excerpt = citation.excerpt?.trim() || undefined;
   return (
     <button
@@ -43,13 +45,13 @@ export function SourceChip({ citation }: { citation: Citation }) {
         })
       }
       aria-label={full}
-      title={[[author?.name, title, citation.locator].filter(Boolean).join(' · '), excerpt ? t('chip.citedText', { excerpt: clip(excerpt, TOOLTIP_EXCERPT) }) : ''].filter(Boolean).join('\n')}
+      title={[[author?.name, title, locator].filter(Boolean).join(' · '), excerpt ? t('chip.citedText', { excerpt: clip(excerpt, TOOLTIP_EXCERPT) }) : ''].filter(Boolean).join('\n')}
       data-excerpt={excerpt ? 'true' : undefined}
     >
       <span className={styles.label}>{label}</span>
-      {citation.locator && (
+      {locator && (
         <span className={styles.locator}>
-          <ScriptText text={citation.locator} />
+          <ScriptText text={locator} />
         </span>
       )}
       <ArrowUpRight aria-hidden="true" className={styles.icon} />

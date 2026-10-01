@@ -25,3 +25,14 @@ describe('localised inference codes', () => {
     }
   });
 });
+
+describe('composed-page summary lines in the reader’s language', () => {
+  it('counts each section in the page language', async () => {
+    const { translate } = await import('../../i18n/catalog');
+    expect(translate('pt', 'inference', 'compose.count.key-passages', { count: 9, section: 'Passagens para cada parte da pergunta' })).toBe('Passagens para cada parte da pergunta — 9 passagens');
+    expect(translate('pt', 'inference', 'compose.count.original-languages', { count: 1, section: 'Palavras-chave' })).toBe('Palavras-chave — 1 palavra-chave');
+    expect(translate('es', 'inference', 'compose.count.commentary', { count: 4, section: 'Voces' })).toBe('Voces — 4 voces');
+    expect(translate('fr', 'inference', 'compose.count.theology', { count: 5, section: 'Théologie' })).toBe('Théologie — 5 éléments de théologie');
+    expect(translate('pt', 'inference', 'compose.stopped.interrupted', { sections: 'Passagens-chave', theology: 'no' })).toMatch(/^A geração foi interrompida.*\(tem Passagens-chave\); onde os cristãos divergem/);
+  });
+});

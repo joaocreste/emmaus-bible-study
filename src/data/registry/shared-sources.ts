@@ -43,7 +43,7 @@ export const SHARED_SOURCES: Source[] = [
     authorIds: [],
     url: 'https://ebible.org/Scriptures/details.php?id=grcbrent',
     edition:
-      'The Greek Septuagint with Apocrypha compiled by Sir Lancelot C. L. Brenton, as distributed by eBible.org, and Brenton’s English translation (first published 1844); read via the Free Use Bible API (grc_bre, eng_bre)',
+      'The Greek Septuagint with Apocrypha compiled by Sir Lancelot C. L. Brenton, with Brenton’s English translation (first published 1844), as distributed by eBible.org',
     license: { status: 'public-domain', name: 'Public domain', usage: 'full-text' },
     description:
       'The ancient Greek translation of the Old Testament used by the New Testament writers and the early church; an early witness to how the Hebrew was read. Its Psalm numbering differs from the Hebrew (Psalm 23 is its Psalm 22).',
@@ -55,7 +55,7 @@ export const SHARED_SOURCES: Source[] = [
     authorIds: [],
     url: 'https://ebible.org/Scriptures/details.php?id=latVUC',
     edition:
-      'Clementine edition as distributed by eBible.org (latVUC), read via the Free Use Bible API (lat_clv). Its Psalm numbering follows the Septuagint (Psalm 23 is Psalm 22).',
+      'Clementine edition, as distributed by eBible.org. Its Psalm numbering follows the Septuagint (Psalm 23 is Psalm 22).',
     license: { status: 'public-domain', name: 'Public domain', usage: 'full-text' },
     description:
       'The standard Latin Bible of the Western church, descended from Jerome’s Vulgate; in the Psalms it follows the Septuagint’s reading at several points.',

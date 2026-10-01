@@ -7,6 +7,7 @@ import { defineMessages } from '../translate';
  */
 export const messages = defineMessages({
   en: {
+    'chip.onRef': 'on {ref}',
     'panel.title': 'Sources',
     'panel.description': 'Every work cited in this study, with its license — and how to read the labels.',
     'panel.empty.title': 'No study open yet',
@@ -116,6 +117,7 @@ export const messages = defineMessages({
     'chip.sources': 'Sources',
   },
   pt: {
+    'chip.onRef': 'sobre {ref}',
     'panel.title': 'Fontes',
     'panel.description': 'Todas as obras citadas neste estudo, com a respectiva licença — e como ler os rótulos.',
     'panel.empty.title': 'Nenhum estudo aberto',
@@ -226,6 +228,7 @@ export const messages = defineMessages({
     'chip.sources': 'Fontes',
   },
   fr: {
+    'chip.onRef': 'sur {ref}',
     'panel.title': 'Sources',
     'panel.description': 'Tous les ouvrages cités dans cette étude, avec leur licence — et comment lire les étiquettes.',
     'panel.empty.title': 'Aucune étude ouverte',
@@ -336,6 +339,7 @@ export const messages = defineMessages({
     'chip.sources': 'Sources',
   },
   es: {
+    'chip.onRef': 'sobre {ref}',
     'panel.title': 'Fuentes',
     'panel.description': 'Todas las obras citadas en este estudio, con su licencia, y cómo leer las etiquetas.',
     'panel.empty.title': 'Ningún estudio abierto',

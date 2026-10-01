@@ -852,7 +852,9 @@ describe('compose — calls run as their blocks stream', () => {
     expect(final.complete).toBe(true);
     expect(final.study.layout?.sections.map((s) => s.id)).toEqual(['key-passages', 'scripture', 'sources']);
     const r = events.find((e) => e.type === 'reply');
-    expect(r?.type === 'reply' && r.reply.text).toMatch(/interrupted by a temporary Claude API error/);
+    // the reader is told what the page lacks; the API error itself stays in the log
+    expect(r?.type === 'reply' && r.reply.text).toMatch(/Composition was interrupted, so this page is incomplete \(it has Where Scripture speaks of divorce\); where Christians differ/);
+    expect(r?.type === 'reply' && r.reply.text).not.toMatch(/Claude|API/);
     expect(logs[0].outcome).toMatchObject({ end: 'interrupted', interruption: { code: 'overloaded' } });
   });
 

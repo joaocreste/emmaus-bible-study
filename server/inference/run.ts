@@ -846,17 +846,21 @@ async function composeReply(run: Run, study: Study, stoppedEarly: ComposeEnd | n
     blocks.push({
       type: 'note',
       tone: 'caution',
+      // in the reader's words and language: what the page lacks, never the API error behind it (that is in the log)
       text:
         stoppedEarly === 'deadline'
-          ? 'Composition reached its time limit, so this page has fewer sections than planned. Every section shown passed the source checks.'
+          ? answerText(run.locale, 'compose.stopped.deadline', {})
           : stoppedEarly === 'interrupted'
-            ? `Composition was interrupted by ${run.interruption && run.interruption.code !== 'overloaded' && run.interruption.code !== 'rate-limited' ? 'a Claude API error' : 'a temporary Claude API error'}, so this page is incomplete (it has ${run.builder.sections.map((s) => run.builder.sectionTitle(s)).join(', ') || 'no sections'}${run.builder.sections.includes('theology') ? '' : '; where Christians differ on this subject, the page does not show it'}). Every section shown passed the source checks.`
-            : 'Composition stopped before the model finished the page, so it has fewer sections than planned. Every section shown passed the source checks.',
+            ? answerText(run.locale, 'compose.stopped.interrupted', {
+                sections: run.builder.sections.map((s) => localSectionTitle(run, s)).join(', ') || answerText(run.locale, 'compose.noSections', {}),
+                theology: run.builder.sections.includes('theology') ? 'yes' : 'no',
+              })
+            : answerText(run.locale, 'compose.stopped.other', {}),
     });
   }
   const updates: DashboardUpdate[] = (study.layout?.sections ?? [])
     .filter((s): s is { id: PageSection } => s.id !== 'scripture' && s.id !== 'sources' && s.id !== 'overview')
-    .map((s) => ({ section: s.id, label: run.builder.describe(s.id) }));
+    .map((s) => ({ section: s.id, label: answerText(run.locale, `compose.count.${s.id}`, { count: run.builder.itemCount(s.id), section: localSectionTitle(run, s.id) }) }));
   const provenance: Provenance = opening?.provenance ?? { kind: 'synthesis', verification: 'generated', citations: [] };
   return {
     id: `a-${study.id}-${shortHash(`${run.now()}`, 6)}`,

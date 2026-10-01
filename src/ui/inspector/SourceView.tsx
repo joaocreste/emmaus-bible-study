@@ -4,6 +4,7 @@ import type { LicenseStatus } from '../../domain/models';
 import { useI18n, useT } from '../../i18n/I18nProvider';
 import { useProviders } from '../../providers/ProvidersContext';
 import { useSession } from '../../state/session';
+import { localizeLocator } from '../common/locator';
 import { renderWithScripts, ScriptText } from '../common/ScriptText';
 import { Badge, type BadgeProps } from '../primitives';
 import { useSectionMeta } from '../study/types';
@@ -39,6 +40,9 @@ const EXCERPT_PREVIEW = 900;
 function CitedPassage({ excerpt, locator }: { excerpt: string; locator?: string }) {
   const id = useId();
   const t = useT('inspector');
+  const ts = useT('sources');
+  const { locale } = useI18n();
+  const shown = locator ? localizeLocator(locator, locale, (ref) => ts('chip.onRef', { ref })) : undefined;
   const [whole, setWhole] = useState(false);
   const long = excerpt.length > EXCERPT_PREVIEW;
   const text = !long || whole ? excerpt : `${excerpt.slice(0, EXCERPT_PREVIEW - 20).replace(/\s+\S*$/, '')} …`;
@@ -47,10 +51,10 @@ function CitedPassage({ excerpt, locator }: { excerpt: string; locator?: string 
     <section className={styles.cited} aria-labelledby={id}>
       <p id={id} className={styles.eyebrow}>
         {t('cited.title')}
-        {locator && (
+        {shown && (
           <span className={styles.citedLocator}>
             {' · '}
-            <ScriptText text={locator} />
+            <ScriptText text={shown} />
           </span>
         )}
       </p>

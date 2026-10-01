@@ -228,7 +228,7 @@ describe('transient API failures', () => {
       expect(final.complete).toBe(true);
       expect(final.study.topic?.keyPassages).toHaveLength(1);
       const r = events.find((e) => e.type === 'reply');
-      expect(r?.type === 'reply' && r.reply.blocks?.some((b) => b.type === 'note' && /interrupted by a temporary Claude API error/.test(b.text))).toBe(true);
+      expect(r?.type === 'reply' && r.reply.blocks?.some((b) => b.type === 'note' && /^Composition was interrupted, so this page is incomplete/.test(b.text) && !/Claude|API/.test(b.text))).toBe(true);
       expect(await readdir(dir)).toEqual([]);
     } finally {
       await rm(dir, { recursive: true, force: true });
@@ -249,7 +249,8 @@ describe('transient API failures', () => {
     expect(finalStudy(events)?.complete).toBe(true);
     const r = events.find((e) => e.type === 'reply');
     const noteText = r?.type === 'reply' ? (r.reply.blocks ?? []).map((b) => ('text' in b ? b.text : '')).join(' ') : '';
-    expect(noteText).toMatch(/interrupted by a Claude API error, so this page is incomplete/);
+    expect(noteText).toMatch(/Composition was interrupted, so this page is incomplete/);
+    expect(noteText).not.toMatch(/Claude|API/);
     expect(JSON.stringify(events)).not.toMatch(/req_test|credit balance is too low/);
     expect(outcomes).toHaveLength(1);
     expect(outcomes[0]).toMatchObject({ persistent: true });
