@@ -42,7 +42,7 @@ function CitedPassage({ excerpt, locator }: { excerpt: string; locator?: string 
   const t = useT('inspector');
   const ts = useT('sources');
   const { locale } = useI18n();
-  const shown = locator ? localizeLocator(locator, locale, (ref) => ts('chip.onRef', { ref })) : undefined;
+  const shown = locator ? localizeLocator(locator, locale, ts) : undefined;
   const [whole, setWhole] = useState(false);
   const long = excerpt.length > EXCERPT_PREVIEW;
   const text = !long || whole ? excerpt : `${excerpt.slice(0, EXCERPT_PREVIEW - 20).replace(/\s+\S*$/, '')} …`;

@@ -5,7 +5,7 @@ import { useProviders } from '../../providers/ProvidersContext';
 import { useSessionActions } from '../../state/session';
 import { ProvenanceTag } from '../primitives';
 import { citationAuthorName, localizeAuthor } from './attribution';
-import { localizeLocator } from './locator';
+import { localizeLocator, readerLocator } from './locator';
 import { ScriptText } from './ScriptText';
 import styles from './SourceChip.module.css';
 
@@ -27,7 +27,9 @@ export function SourceChip({ citation }: { citation: Citation }) {
   const title = source ? source.title : t('chip.unknownSource', { id: citation.sourceId });
   const who = author && source?.type !== 'bible-translation' ? `${citationAuthorName(author)}, ` : '';
   const label = `${who}${shorten(title)}`;
-  const locator = citation.locator ? localizeLocator(citation.locator, locale, (ref) => t('chip.onRef', { ref })) : undefined;
+  // in the reader's terms: a lexicon entry by its word rather than its Strong's number, references and structural words in their language
+  const raw = readerLocator(citation.locator, citation.note);
+  const locator = raw ? localizeLocator(raw, locale, t) : undefined;
   // The chip truncates visually; its accessible name keeps the whole citation (it starts with the visible label).
   const full = `${who}${title}${locator ? `, ${locator}` : ''}`;
   const excerpt = citation.excerpt?.trim() || undefined;
@@ -41,7 +43,7 @@ export function SourceChip({ citation }: { citation: Citation }) {
           type: 'source',
           sourceId: citation.sourceId,
           ...(excerpt ? { excerpt } : {}),
-          ...(excerpt && citation.locator ? { locator: citation.locator } : {}),
+          ...(excerpt && locator ? { locator } : {}),
         })
       }
       aria-label={full}
