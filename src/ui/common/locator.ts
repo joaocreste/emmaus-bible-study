@@ -38,7 +38,7 @@ const STRUCTURE: [RegExp, (t: Translate, m: RegExpExecArray, locale: Locale) => 
   [/^Session (\d+)/g, (t, m) => t('locator.session', { n: m[1] })],
   [/\bcan\. (\d+)/g, (t, m) => t('locator.canon', { n: m[1] })],
   [/^Head ([IVX]+(?:[–-][IVX]+)?)/g, (t, m) => t('locator.head', { n: m[1] })],
-  [/^Part ([IVX]+):/g, (t, m) => t('locator.part', { n: m[1] })],
+  [/^Part ([IVX]+)\b/g, (t, m) => t('locator.part', { n: m[1] })],
   [/^Sermon (\d+)/g, (t, m) => t('locator.sermon', { n: m[1] })],
   [/^Decree ([IVX]+)\b/g, (t, m) => t('locator.decree', { n: m[1] })],
   [/^Preface\b/g, (t) => t('locator.preface')],
@@ -78,4 +78,64 @@ export function readerLocator(locator: string | undefined, note: string | undefi
   if (!locator || !STRONG.test(locator.trim())) return locator;
   const m = note ? /^(\S+) \(([^,()]+), [GH]\d{1,5}[A-Za-z]?\)/.exec(note.trim()) : null;
   return m ? `${m[1]} (${m[2]})` : undefined;
+}
+
+/** A locator piece that names a place, not a title: numbers, structural markers, Bible references, volume/year. */
+const STRUCTURAL_PIECE =
+  /^(?:ch\. \d+(?: §\d+)?|§\d+|Q\. \d+|Art\. \d+|can\. \d+|Session \d+|Head [IVX]+(?:[–-][IVX]+)?|Part [IVX]+|Sermon \d+|Decree [IVX]+|Preface|part \d+ of \d+|vol\. \d+(?: \(\d{4}\))?|pp?\. \d+(?:[–-]\d+)?)$/;
+
+/**
+ * The short locator a source chip shows to a reader of another language: the places named in it
+ * (chapter, question, session, canon, part…) and its Bible references, in the reader's language;
+ * the source's own English titles and headwords ("Canons on the Sacrament of Matrimony",
+ * "s.v. Atonement, Day of") are left out — the chip already names the source, and the inspector
+ * shows the full locator beside the cited text. Undefined when nothing but titles remains.
+ */
+export function chipLocator(locator: string, locale: Locale, t: Translate): string | undefined {
+  if (locale === 'en') return locator;
+  const text = locator.trim();
+  if (localRef(text, locale)) return localizeLocator(text, locale, t);
+  const on = /^on (.+)$/.exec(text);
+  if (on && localRef(on[1], locale)) return localizeLocator(text, locale, t);
+  // pieces: the comma-separated parts, each with its parenthetical groups split off
+  const kept: string[] = [];
+  for (const part of splitTop(text, ',')) {
+    const head = part.replace(/\s*\([^()]*\)/g, '').trim().replace(/^(Part [IVX]+):.*$/, '$1');
+    const groups = [...part.matchAll(/\(([^()]*)\)/g)].map((m) => m[1].trim());
+    const place = piece(head, locale, t);
+    if (!place) continue;
+    const extras = groups.map((g) => piece(g, locale, t)).filter((g): g is string => Boolean(g)).map((g) => `(${g})`);
+    kept.push([place, ...extras].join(' '));
+  }
+  return kept.length ? kept.join(', ') : undefined;
+}
+
+/** One locator piece in the reader's language, or undefined when it is a title or headword. */
+function piece(text: string, locale: Locale, t: Translate): string | undefined {
+  const ref = localRef(text, locale);
+  if (ref) return ref;
+  const on = /^on (.+)$/.exec(text);
+  const onRef = on ? localRef(on[1], locale) : null;
+  if (onRef) return t('chip.onRef', { ref: onRef });
+  const same = /^= (.+)$/.exec(text);
+  const sameRef = same ? localRef(same[1], locale) : null;
+  if (sameRef) return `= ${sameRef}`;
+  return STRUCTURAL_PIECE.test(text) ? localizeLocator(text, locale, t) : undefined;
+}
+
+/** Split on a separator outside parentheses. */
+function splitTop(text: string, sep: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let cur = '';
+  for (const ch of text) {
+    if (ch === '(') depth++;
+    if (ch === ')') depth = Math.max(0, depth - 1);
+    if (ch === sep && depth === 0) {
+      out.push(cur);
+      cur = '';
+    } else cur += ch;
+  }
+  out.push(cur);
+  return out.map((s) => s.trim()).filter(Boolean);
 }

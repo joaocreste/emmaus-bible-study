@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { translate } from '../../../i18n/catalog';
 import type { Locale } from '../../../i18n/locales';
-import { localizeLocator, readerLocator } from '../locator';
+import { chipLocator, localizeLocator, readerLocator } from '../locator';
 
+const chip = (locator: string, locale: Locale = 'pt') => chipLocator(locator, locale, (key, params) => translate(locale, 'sources', key, params));
 const loc = (locator: string, locale: Locale = 'pt') => localizeLocator(locator, locale, (key, params) => translate(locale, 'sources', key, params));
 
 describe('citation locators in the reader’s language', () => {
@@ -45,5 +46,28 @@ describe('lexicon citations by their word, not their Strong’s number', () => {
     expect(readerLocator('G4641', 'Lexicon entry')).toBeUndefined();
     expect(readerLocator('ch. 24 §5', undefined)).toBe('ch. 24 §5');
     expect(readerLocator(undefined, 'x')).toBeUndefined();
+  });
+});
+
+describe('source chips for readers of other languages: places, not English titles', () => {
+  it('keeps chapters, questions, sessions, canons, parts and Bible references, translated', () => {
+    expect(chip('Session 24, Canons on the Sacrament of Matrimony, can. 5')).toBe('Sessão 24, cân. 5');
+    expect(chip('Session 6, Decree on Justification, ch. 1', 'es')).toBe('Sesión 6, cap. 1');
+    expect(chip('ch. 24 §5')).toBe('cap. 24 §5');
+    expect(chip('Q. 74 (Part I: On Faith, On the Articles of the Creed)')).toBe('P. 74');
+    expect(chip('Head III–IV, Art. 1')).toBe('Capítulo III–IV, Art. 1');
+    expect(chip('Part II: The Sacraments, Baptism, §§ Infants Receive the Graces of Baptism')).toBe('Parte II');
+    expect(chip('Sermon 1 (on Eph. 2:8), part 1 of 13')).toBe('Sermão 1 (sobre Ef 2:8), parte 1 de 13');
+    expect(chip('Decree III (part 1 of 2) (Robertson, pp. 114–116)')).toBe('Decreto III (parte 1 de 2)');
+    expect(chip('vol. 9 (1910), s.v. “Sacrament of Marriage”, § Proof of sacramental character')).toBe('vol. 9');
+    expect(chip('Harmony of the Evangelists, on Matt 19:3')).toBe('sobre Mt 19:3');
+    expect(chip('Ps 22:6 (= Ps 23:6)')).toBe('Sl 22:6 (= Sl 23:6)');
+    expect(chip('Malachi 2:13–16')).toBe('Malaquias 2:13–16');
+  });
+
+  it('shows nothing when only a title or headword is left, and everything to English readers', () => {
+    expect(chip('s.v. Atonement, Day of')).toBeUndefined();
+    expect(chip('Opening address (Robertson, pp. 110–111)')).toBeUndefined();
+    expect(chip('Session 24, Canons on the Sacrament of Matrimony, can. 5', 'en')).toBe('Session 24, Canons on the Sacrament of Matrimony, can. 5');
   });
 });
